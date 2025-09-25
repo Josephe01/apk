@@ -1,0 +1,36 @@
+# Arduino IDE files
+*.hex
+*.elf
+*.map
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build directories
+build/
+dist/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Log files
+*.log
+
+# Temporary test files
+/tmp/
+test_output/

@@ -1,0 +1,159 @@
+/*
+ * Display Implementation Examples
+ * 
+ * This directory contains example implementations for different display types.
+ * Copy the appropriate example code into your main Arduino sketch.
+ */
+
+// ========================================
+// EXAMPLE 1: SSD1306 OLED Display
+// ========================================
+
+/*
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "wobble_config.h"
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void initializeDisplay() {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.display();
+}
+
+void clearDisplay() {
+  display.clearDisplay();
+}
+
+void drawPixel(int x, int y) {
+  display.drawPixel(x, y, SSD1306_WHITE);
+}
+
+void drawLine(int x0, int y0, int x1, int y1) {
+  display.drawLine(x0, y0, x1, y1, SSD1306_WHITE);
+}
+
+void updateDisplay() {
+  display.display();
+}
+*/
+
+// ========================================
+// EXAMPLE 2: ST7735 TFT Display
+// ========================================
+
+/*
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+#include "wobble_config.h"
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+void initializeDisplay() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+}
+
+void clearDisplay() {
+  tft.fillScreen(ST77XX_BLACK);
+}
+
+void drawPixel(int x, int y) {
+  tft.drawPixel(x, y, ST77XX_WHITE);
+}
+
+void drawLine(int x0, int y0, int x1, int y1) {
+  tft.drawLine(x0, y0, x1, y1, ST77XX_WHITE);
+}
+
+void updateDisplay() {
+  // No explicit update needed for TFT
+}
+*/
+
+// ========================================
+// EXAMPLE 3: ST7789 TFT Display
+// ========================================
+
+/*
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
+#include <SPI.h>
+#include "wobble_config.h"
+
+Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+
+void initializeDisplay() {
+  tft.init(SCREEN_WIDTH, SCREEN_HEIGHT);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+}
+
+void clearDisplay() {
+  tft.fillScreen(ST77XX_BLACK);
+}
+
+void drawPixel(int x, int y) {
+  tft.drawPixel(x, y, ST77XX_WHITE);
+}
+
+void drawLine(int x0, int y0, int x1, int y1) {
+  tft.drawLine(x0, y0, x1, y1, ST77XX_WHITE);
+}
+
+void updateDisplay() {
+  // No explicit update needed for TFT
+}
+*/
+
+// ========================================
+// EXAMPLE 4: Serial Monitor Output (for testing)
+// ========================================
+
+/*
+void initializeDisplay() {
+  Serial.begin(9600);
+  Serial.println("Serial display initialized");
+  Serial.print("Screen size: ");
+  Serial.print(SCREEN_WIDTH);
+  Serial.print(" x ");
+  Serial.println(SCREEN_HEIGHT);
+}
+
+void clearDisplay() {
+  Serial.println("\n--- New Frame ---");
+}
+
+void drawPixel(int x, int y) {
+  Serial.print("Pixel at (");
+  Serial.print(x);
+  Serial.print(", ");
+  Serial.print(y);
+  Serial.println(")");
+}
+
+void drawLine(int x0, int y0, int x1, int y1) {
+  Serial.print("Line from (");
+  Serial.print(x0);
+  Serial.print(", ");
+  Serial.print(y0);
+  Serial.print(") to (");
+  Serial.print(x1);
+  Serial.print(", ");
+  Serial.print(y1);
+  Serial.println(")");
+}
+
+void updateDisplay() {
+  Serial.println("Display updated\n");
+}
+*/
