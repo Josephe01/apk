@@ -1,0 +1,144 @@
+/* Dark Theme Styles */
+body {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Navigation */
+.navbar-dark {
+    background-color: #1f1f1f !important;
+}
+
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff !important;
+}
+
+/* Cards */
+.card {
+    background-color: #1e1e1e;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+.card-header {
+    background-color: #2d2d2d;
+    border-bottom-color: #333333;
+    color: #ffffff;
+}
+
+/* Tables */
+.table {
+    color: #ffffff;
+}
+
+.table th {
+    background-color: #2d2d2d;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+.table td {
+    border-color: #333333;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff;
+}
+
+/* Forms */
+.form-control, .form-select {
+    background-color: #2d2d2d;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #2d2d2d;
+    border-color: #4a90e2;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
+}
+
+.input-group-text {
+    background-color: #2d2d2d;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+/* Buttons */
+.btn-light {
+    background-color: #333333;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+.btn-light:hover {
+    background-color: #444444;
+    border-color: #444444;
+    color: #ffffff;
+}
+
+/* Modals */
+.modal-content {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.modal-header {
+    background-color: #2d2d2d;
+    border-bottom-color: #333333;
+}
+
+/* Alerts */
+.alert-info {
+    background-color: #1a2332;
+    border-color: #2e4a66;
+    color: #b6d7ff;
+}
+
+/* Badges */
+.badge.bg-secondary {
+    background-color: #666666 !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background-color: #2d2d2d;
+    border-color: #333333;
+}
+
+.dropdown-item {
+    color: #ffffff;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+/* Audit Banner */
+#audit-banner {
+    background-color: #1a2332;
+    border-color: #2e4a66;
+    color: #b6d7ff;
+}
+
+/* Text colors */
+.text-muted {
+    color: #aaaaaa !important;
+}
+
+/* Links */
+a {
+    color: #4a90e2;
+}
+
+a:hover {
+    color: #6ba3e6;
+}

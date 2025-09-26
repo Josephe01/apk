@@ -84,6 +84,17 @@ class AuditLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
 
+class Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    theme = db.Column(db.String(20), default='light')  # light, dark, blue
+    icon_set = db.Column(db.String(20), default='fontawesome')  # fontawesome, bootstrap
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='settings', lazy=True)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -134,6 +145,51 @@ def inventory():
     """Inventory management page"""
     items = InventoryItem.query.all()
     return render_template('inventory.html', items=items)
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    """Admin settings page for theme and icon customization"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    # Get or create user settings
+    user_settings = Settings.query.filter_by(user_id=current_user.id).first()
+    if not user_settings:
+        user_settings = Settings(user_id=current_user.id)
+        db.session.add(user_settings)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        # Handle form submission
+        theme = request.form.get('theme', 'light')
+        icon_set = request.form.get('icon_set', 'fontawesome')
+        
+        # Validate theme and icon_set values
+        valid_themes = ['light', 'dark', 'blue']
+        valid_icon_sets = ['fontawesome', 'bootstrap']
+        
+        if theme not in valid_themes:
+            theme = 'light'
+        if icon_set not in valid_icon_sets:
+            icon_set = 'fontawesome'
+        
+        # Update settings
+        user_settings.theme = theme
+        user_settings.icon_set = icon_set
+        user_settings.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # Emit real-time update to all users (optional)
+        socketio.emit('theme_updated', {
+            'theme': theme,
+            'icon_set': icon_set
+        }, room='all_users')
+        
+        return redirect(url_for('settings'))
+    
+    return render_template('settings.html', settings=user_settings)
 
 @app.route('/start_audit', methods=['POST'])
 @login_required
@@ -220,6 +276,23 @@ def get_session_details(session_id):
         'items_scanned': session.items_scanned,
         'discrepancies_found': session.discrepancies_found,
         'notes': session.notes
+    })
+
+@app.route('/api/settings')
+@login_required
+def get_current_settings():
+    """Get current user settings for theme and icons"""
+    user_settings = Settings.query.filter_by(user_id=current_user.id).first()
+    if not user_settings:
+        # Return defaults if no settings exist
+        return jsonify({
+            'theme': 'light',
+            'icon_set': 'fontawesome'
+        })
+    
+    return jsonify({
+        'theme': user_settings.theme,
+        'icon_set': user_settings.icon_set
     })
 
 @app.route('/api/session/<session_id>/end', methods=['POST'])
