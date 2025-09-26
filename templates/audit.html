@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Session - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-search me-2"></i>Inventory Audit</h1>
+                <p class="text-muted">Session ID: <code>{{ session.session_id }}</code></p>
+            </div>
+            <div>
+                <button class="btn btn-success me-2" onclick="completeAudit()">
+                    <i class="fas fa-check me-1"></i>Complete Audit
+                </button>
+                <button class="btn btn-outline-secondary" onclick="pauseAudit()">
+                    <i class="fas fa-pause me-1"></i>Pause
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h3 id="items-scanned">{{ session.items_scanned }}</h3>
+                <p class="mb-0">Items Scanned</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h3 id="discrepancies-found">{{ session.discrepancies_found }}</h3>
+                <p class="mb-0">Discrepancies</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h3 id="session-duration">00:00:00</h3>
+                <p class="mb-0">Duration</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h3 id="completion-rate">0%</h3>
+                <p class="mb-0">Completion</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scanning Interface -->
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Barcode Scanner -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-barcode me-2"></i>Scan Item</h5>
+            </div>
+            <div class="card-body">
+                <form id="scanForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="barcodeInput" class="form-label">Barcode / SKU</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                                    <input type="text" class="form-control" id="barcodeInput" placeholder="Scan or enter barcode/SKU" autofocus>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="openCamera()">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="actualQuantity" class="form-label">Actual Quantity</label>
+                                <input type="number" class="form-control" id="actualQuantity" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-1"></i>Scan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Current Item Display -->
+                <div id="currentItem" class="alert alert-info d-none">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="alert-heading" id="itemName"></h6>
+                            <p class="mb-1">SKU: <code id="itemSku"></code> | Location: <span id="itemLocation"></span></p>
+                            <p class="mb-0">Expected: <span class="badge bg-primary" id="expectedQty"></span> | Actual: <span class="badge bg-info" id="actualQty"></span></p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div id="discrepancyStatus"></div>
+                            <button class="btn btn-success btn-sm mt-2" onclick="confirmScan()">
+                                <i class="fas fa-check me-1"></i>Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history me-2"></i>Recent Scans</h5>
+            </div>
+            <div class="card-body">
+                <div id="recentScans">
+                    <p class="text-muted">No items scanned yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Quick Reference -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list me-2"></i>Quick Reference</h5>
+                <div class="input-group input-group-sm mt-2">
+                    <input type="text" class="form-control" id="quickSearch" placeholder="Search items...">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <div id="itemsList">
+                    {% for item in items %}
+                    <div class="item-card border-bottom pb-2 mb-2" data-barcode="{{ item.barcode or item.sku }}" data-name="{{ item.name.lower() }}">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ item.name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ item.sku }}
+                                    {% if item.barcode %} | {{ item.barcode }}{% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">{{ item.expected_quantity }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-1" onclick="quickScan('{{ item.barcode or item.sku }}')">
+                                    <i class="fas fa-barcode"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Barcode Scanner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="camera-container" class="text-center">
+                    <video id="camera-video" width="100%" height="300" style="border: 1px solid #ddd;"></video>
+                    <canvas id="camera-canvas" style="display: none;"></canvas>
+                </div>
+                <div class="mt-3 text-center">
+                    <button class="btn btn-primary" id="capture-btn">
+                        <i class="fas fa-camera me-1"></i>Capture
+                    </button>
+                    <button class="btn btn-secondary ms-2" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Completion Modal -->
+<div class="modal fade" id="completionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Audit Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="completionNotes" class="form-label">Session Notes (Optional)</label>
+                    <textarea class="form-control" id="completionNotes" rows="3" placeholder="Add any notes about this audit session..."></textarea>
+                </div>
+                <div class="alert alert-info">
+                    <strong>Session Summary:</strong>
+                    <ul class="mt-2 mb-0">
+                        <li>Items Scanned: <span id="summaryItemsScanned">{{ session.items_scanned }}</span></li>
+                        <li>Discrepancies Found: <span id="summaryDiscrepancies">{{ session.discrepancies_found }}</span></li>
+                        <li>Duration: <span id="summaryDuration">-</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmCompletion()">
+                    <i class="fas fa-check me-1"></i>Complete Session
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSession = {
+    id: '{{ session.session_id }}',
+    startTime: new Date('{{ session.start_time.isoformat() }}'),
+    itemsScanned: {{ session.items_scanned }},
+    discrepanciesFound: {{ session.discrepancies_found }}
+};
+
+let currentItem = null;
+let durationInterval = null;
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    startDurationTimer();
+    setupQuickSearch();
+    
+    // Focus on barcode input
+    document.getElementById('barcodeInput').focus();
+});
+
+// Duration timer
+function startDurationTimer() {
+    durationInterval = setInterval(function() {
+        const now = new Date();
+        const diff = now - currentSession.startTime;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        document.getElementById('session-duration').textContent = 
+            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+// Scan form submission
+document.getElementById('scanForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const barcode = document.getElementById('barcodeInput').value.trim();
+    const actualQuantity = parseInt(document.getElementById('actualQuantity').value);
+    
+    if (!barcode) {
+        alert('Please enter a barcode or SKU');
+        return;
+    }
+    
+    scanItem(barcode, actualQuantity);
+});
+
+function scanItem(barcode, actualQuantity) {
+    // Show loading state
+    const scanBtn = document.querySelector('#scanForm button[type="submit"]');
+    const originalText = scanBtn.innerHTML;
+    scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Scanning...';
+    scanBtn.disabled = true;
+    
+    // Call API to scan item
+    fetch('/api/scan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: currentSession.id,
+            barcode: barcode,
+            actual_quantity: actualQuantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayScannedItem(data.item);
+            addToRecentScans(data.item);
+            updateStats();
+            
+            // Clear form
+            document.getElementById('barcodeInput').value = '';
+            document.getElementById('actualQuantity').value = '0';
+            document.getElementById('barcodeInput').focus();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to scan item');
+    })
+    .finally(() => {
+        // Reset button
+        scanBtn.innerHTML = originalText;
+        scanBtn.disabled = false;
+    });
+}
+
+function displayScannedItem(item) {
+    currentItem = item;
+    
+    document.getElementById('itemName').textContent = item.name;
+    document.getElementById('itemSku').textContent = item.id; // Should be item.sku from API
+    document.getElementById('itemLocation').textContent = item.location || 'Not specified';
+    document.getElementById('expectedQty').textContent = item.expected_quantity;
+    document.getElementById('actualQty').textContent = item.actual_quantity;
+    
+    // Discrepancy status
+    const discrepancyDiv = document.getElementById('discrepancyStatus');
+    const discrepancy = item.discrepancy;
+    
+    if (discrepancy === 0) {
+        discrepancyDiv.innerHTML = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Match</span>';
+    } else if (discrepancy > 0) {
+        discrepancyDiv.innerHTML = `<span class="badge bg-warning"><i class="fas fa-arrow-up me-1"></i>Over by ${discrepancy}</span>`;
+    } else {
+        discrepancyDiv.innerHTML = `<span class="badge bg-danger"><i class="fas fa-arrow-down me-1"></i>Under by ${Math.abs(discrepancy)}</span>`;
+    }
+    
+    document.getElementById('currentItem').classList.remove('d-none');
+}
+
+function addToRecentScans(item) {
+    const recentScansDiv = document.getElementById('recentScans');
+    
+    // Create scan entry
+    const scanEntry = document.createElement('div');
+    scanEntry.className = 'border-bottom pb-2 mb-2';
+    scanEntry.innerHTML = `
+        <div class="d-flex justify-content-between">
+            <div>
+                <strong>${item.name}</strong>
+                <br>
+                <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-primary">${item.expected_quantity}</span>
+                <span class="badge bg-info">${item.actual_quantity}</span>
+                ${item.discrepancy === 0 ? 
+                    '<span class="badge bg-success"><i class="fas fa-check"></i></span>' :
+                    `<span class="badge ${item.discrepancy > 0 ? 'bg-warning' : 'bg-danger'}">${item.discrepancy > 0 ? '+' : ''}${item.discrepancy}</span>`
+                }
+            </div>
+        </div>
+    `;
+    
+    // Remove "no items" message if it exists
+    if (recentScansDiv.innerHTML.includes('No items scanned yet')) {
+        recentScansDiv.innerHTML = '';
+    }
+    
+    // Add to top
+    recentScansDiv.insertBefore(scanEntry, recentScansDiv.firstChild);
+    
+    // Keep only last 10 entries
+    while (recentScansDiv.children.length > 10) {
+        recentScansDiv.removeChild(recentScansDiv.lastChild);
+    }
+}
+
+function updateStats() {
+    currentSession.itemsScanned++;
+    document.getElementById('items-scanned').textContent = currentSession.itemsScanned;
+    
+    if (currentItem && currentItem.discrepancy !== 0) {
+        currentSession.discrepanciesFound++;
+        document.getElementById('discrepancies-found').textContent = currentSession.discrepanciesFound;
+    }
+    
+    // Update completion rate (assuming total items)
+    const totalItems = {{ items|length }};
+    const completionRate = Math.round((currentSession.itemsScanned / totalItems) * 100);
+    document.getElementById('completion-rate').textContent = completionRate + '%';
+}
+
+function quickScan(barcode) {
+    document.getElementById('barcodeInput').value = barcode;
+    document.getElementById('barcodeInput').focus();
+}
+
+function setupQuickSearch() {
+    document.getElementById('quickSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.item-card');
+        
+        items.forEach(item => {
+            const name = item.dataset.name;
+            const barcode = item.dataset.barcode.toLowerCase();
+            
+            if (name.includes(searchTerm) || barcode.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+}
+
+function openCamera() {
+    new bootstrap.Modal(document.getElementById('cameraModal')).show();
+    // Camera functionality would be implemented here
+}
+
+function completeAudit() {
+    document.getElementById('summaryItemsScanned').textContent = currentSession.itemsScanned;
+    document.getElementById('summaryDiscrepancies').textContent = currentSession.discrepanciesFound;
+    document.getElementById('summaryDuration').textContent = document.getElementById('session-duration').textContent;
+    
+    new bootstrap.Modal(document.getElementById('completionModal')).show();
+}
+
+function confirmCompletion() {
+    const notes = document.getElementById('completionNotes').value;
+    
+    fetch(`/api/session/${currentSession.id}/end`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notes: notes })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Audit session completed successfully!');
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to complete audit session');
+    });
+}
+
+function pauseAudit() {
+    if (confirm('Are you sure you want to pause this audit session?')) {
+        // Implement pause functionality
+        alert('Pause functionality - to be implemented');
+    }
+}
+
+function confirmScan() {
+    document.getElementById('currentItem').classList.add('d-none');
+    currentItem = null;
+}
+
+// Handle barcode input with Enter key
+document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('scanForm').dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}
