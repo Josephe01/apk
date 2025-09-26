@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Access Logs - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-list-alt"></i> Access Logs</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h6><i class="fas fa-filter"></i> Filter Options</h6>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="user" class="form-label">User</label>
+                <select class="form-select" id="user" name="user">
+                    <option value="">All Users</option>
+                    <!-- Add user options dynamically if needed -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="resource" class="form-label">Resource</label>
+                <select class="form-select" id="resource" name="resource">
+                    <option value="">All Resources</option>
+                    <option value="authentication">Authentication</option>
+                    <option value="inventory">Inventory</option>
+                    <option value="users">Users</option>
+                    <option value="roles">Roles</option>
+                    <option value="logs">Logs</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="success" class="form-label">Status</label>
+                <select class="form-select" id="success" name="success">
+                    <option value="">All</option>
+                    <option value="true">Success</option>
+                    <option value="false">Failed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary d-block">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if logs.items %}
+<div class="card">
+    <div class="card-header">
+        <h6>Access Log Entries</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>Resource ID</th>
+                        <th>Status</th>
+                        <th>IP Address</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr class="{% if not log.success %}table-warning{% endif %}">
+                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ log.user.username }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ log.resource }}</span>
+                        </td>
+                        <td>{{ log.resource_id or '-' }}</td>
+                        <td>
+                            {% if log.success %}
+                                <span class="badge bg-success">Success</span>
+                            {% else %}
+                                <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.ip_address or '-' }}</td>
+                        <td>
+                            {% if log.details %}
+                                <button class="btn btn-sm btn-outline-info" 
+                                        onclick="showDetails('{{ log.details|replace("'", "\\'") }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if logs.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if logs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('access_logs', page=logs.prev_num) }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in logs.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != logs.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('access_logs', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('access_logs', page=logs.next_num) }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle"></i> No access logs found.
+</div>
+{% endif %}
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Log Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showDetails(details) {
+    document.getElementById('detailsContent').textContent = details;
+    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

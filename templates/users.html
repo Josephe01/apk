@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-users"></i> User Management</h1>
+</div>
+
+{% if users %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Created</th>
+                {% if can_assign_roles %}
+                <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% for role in user.get_roles() %}
+                        <span class="badge bg-info me-1">{{ role }}</span>
+                    {% else %}
+                        <span class="text-muted">No roles assigned</span>
+                    {% endfor %}
+                </td>
+                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                {% if can_assign_roles %}
+                <td>
+                    <a href="{{ url_for('manage_user_roles', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-user-tag"></i> Manage Roles
+                    </a>
+                    <button class="btn btn-sm btn-outline-info" onclick="viewUserPermissions({{ user.id }})">
+                        <i class="fas fa-key"></i> View Permissions
+                    </button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle"></i> No users found.
+</div>
+{% endif %}
+
+<!-- User Permissions Modal -->
+<div class="modal fade" id="permissionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Permissions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="permissionsContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewUserPermissions(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('permissionsModal'));
+    const content = document.getElementById('permissionsContent');
+    
+    // Show loading spinner
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Fetch permissions
+    fetch(`/api/user-permissions/${userId}`)
+        .then(response => response.json())
+        .then(permissions => {
+            if (permissions.length === 0) {
+                content.innerHTML = '<p class="text-muted">No permissions assigned to this user.</p>';
+                return;
+            }
+            
+            // Group permissions by role
+            const permissionsByRole = {};
+            permissions.forEach(perm => {
+                if (!permissionsByRole[perm.role]) {
+                    permissionsByRole[perm.role] = [];
+                }
+                permissionsByRole[perm.role].push(perm);
+            });
+            
+            let html = '';
+            Object.keys(permissionsByRole).forEach(role => {
+                html += `<h6><span class="badge bg-info">${role}</span> Role Permissions:</h6>`;
+                html += '<ul class="list-group mb-3">';
+                permissionsByRole[role].forEach(perm => {
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${perm.name}</strong><br>
+                                <small class="text-muted">${perm.description}</small>
+                            </div>
+                            <span class="badge bg-secondary">${perm.resource}:${perm.action}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            });
+            
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            content.innerHTML = '<p class="text-danger">Error loading permissions.</p>';
+        });
+}
+</script>
+{% endblock %}

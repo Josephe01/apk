@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Roles - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-tag"></i> Role Management</h1>
+</div>
+
+{% if roles %}
+<div class="row">
+    {% for role in roles %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>{{ role.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ role.description or 'No description available.' }}</p>
+                
+                <!-- Show permissions for this role -->
+                <h6>Permissions:</h6>
+                {% if role.role_permissions %}
+                <div class="mb-3">
+                    {% for role_perm in role.role_permissions %}
+                    <span class="badge bg-secondary me-1 mb-1">
+                        {{ role_perm.permission.resource }}:{{ role_perm.permission.action }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No permissions assigned.</p>
+                {% endif %}
+                
+                <!-- Show user count -->
+                <p class="text-muted">
+                    <i class="fas fa-users"></i> 
+                    {{ role.user_roles|length }} user(s) assigned
+                </p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">Created: {{ role.created_at.strftime('%Y-%m-%d') }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Role Details Modal -->
+<div class="modal fade" id="roleDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Role Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="roleDetailsContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle"></i> No roles found.
+</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5><i class="fas fa-info-circle"></i> Role-Based Access Control (RBAC) Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Admin Role</h6>
+                <p>Full system access including user management, role assignment, and access to all features and logs.</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Manager Role</h6>
+                <p>Can manage inventory items, view reports, and access user information but cannot modify user roles.</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Viewer Role</h6>
+                <p>Read-only access to inventory and basic user information. Cannot modify any data.</p>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <h6>Security Features</h6>
+        <ul>
+            <li><strong>Permission-based access:</strong> Each action is checked against user permissions</li>
+            <li><strong>Audit logging:</strong> All access attempts and actions are logged</li>
+            <li><strong>Session management:</strong> Secure user authentication and session handling</li>
+            <li><strong>Role validation:</strong> Roles cannot be bypassed or escalated without proper authorization</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

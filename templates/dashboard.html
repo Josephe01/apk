@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-user-tag"></i> Your Roles & Permissions</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    {% for role in user_roles %}
+                        <span class="badge bg-primary me-2">{{ role }}</span>
+                    {% endfor %}
+                </div>
+                <p class="text-muted">Your access level determines which features you can use in the system.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if 'inventory_count' in stats %}
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header"><i class="fas fa-boxes"></i> Inventory Items</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ stats.inventory_count }}</h4>
+                <p class="card-text">Total items in inventory</p>
+                <a href="{{ url_for('inventory') }}" class="btn btn-light btn-sm">View Inventory</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if 'user_count' in stats %}
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header"><i class="fas fa-users"></i> System Users</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ stats.user_count }}</h4>
+                <p class="card-text">Registered users</p>
+                <a href="{{ url_for('users') }}" class="btn btn-light btn-sm">Manage Users</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.has_role('Admin') %}
+    <div class="col-md-4">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-header"><i class="fas fa-shield-alt"></i> Access Control</div>
+            <div class="card-body">
+                <h4 class="card-title">RBAC</h4>
+                <p class="card-text">Role-based security</p>
+                <a href="{{ url_for('roles') }}" class="btn btn-light btn-sm">Manage Roles</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if 'recent_logs' in stats %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list-alt"></i> Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Resource</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in stats.recent_logs %}
+                            <tr>
+                                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ log.user.username }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.resource }}</td>
+                                <td>
+                                    {% if log.success %}
+                                        <span class="badge bg-success">Success</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('access_logs') }}" class="btn btn-primary btn-sm">View All Logs</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Add Inventory Item - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-plus"></i> Add Inventory Item</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('inventory') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Inventory
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Item Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity *</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price ($)</label>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="category" name="category" placeholder="e.g., Electronics, Furniture, Office Supplies">
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('inventory') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Required fields are marked with *</strong></p>
+                <p>All inventory items are tracked with creation timestamps and user attribution for audit purposes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
