@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+
+{% block title %}Theme Management - APK System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-palette me-2"></i>Theme Management</h1>
+            <button type="button" class="btn btn-success" onclick="showCreateThemeModal()">
+                <i class="fas fa-plus me-1"></i>Create Theme
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Theme Cards -->
+<div class="row" id="themesContainer">
+    <!-- Themes will be loaded dynamically -->
+</div>
+
+<!-- Create/Edit Theme Modal -->
+<div class="modal fade" id="themeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="themeModalTitle">Create Theme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Theme Details Form -->
+                        <form id="themeForm">
+                            <input type="hidden" id="themeId">
+                            
+                            <div class="mb-3">
+                                <label for="themeName" class="form-label">Theme Name *</label>
+                                <input type="text" class="form-control" id="themeName" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="themeDisplayName" class="form-label">Display Name *</label>
+                                <input type="text" class="form-control" id="themeDisplayName" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="themeDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="themeDescription" rows="3"></textarea>
+                            </div>
+                            
+                            <h6>Color Configuration</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="primaryColor" class="form-label">Primary Color</label>
+                                        <input type="color" class="form-control form-control-color" id="primaryColor" value="#007bff">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="secondaryColor" class="form-label">Secondary Color</label>
+                                        <input type="color" class="form-control form-control-color" id="secondaryColor" value="#6c757d">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="successColor" class="form-label">Success Color</label>
+                                        <input type="color" class="form-control form-control-color" id="successColor" value="#28a745">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dangerColor" class="form-label">Danger Color</label>
+                                        <input type="color" class="form-control form-control-color" id="dangerColor" value="#dc3545">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="warningColor" class="form-label">Warning Color</label>
+                                        <input type="color" class="form-control form-control-color" id="warningColor" value="#ffc107">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="infoColor" class="form-label">Info Color</label>
+                                        <input type="color" class="form-control form-control-color" id="infoColor" value="#17a2b8">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="backgroundColor" class="form-label">Background Color</label>
+                                        <input type="color" class="form-control form-control-color" id="backgroundColor" value="#ffffff">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="textColor" class="form-label">Text Color</label>
+                                        <input type="color" class="form-control form-control-color" id="textColor" value="#212529">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h6>Typography</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fontFamily" class="form-label">Font Family</label>
+                                        <select class="form-select" id="fontFamily">
+                                            <option value="system-ui">System Default</option>
+                                            <option value="Arial, sans-serif">Arial</option>
+                                            <option value="Helvetica, sans-serif">Helvetica</option>
+                                            <option value="Georgia, serif">Georgia</option>
+                                            <option value="'Times New Roman', serif">Times New Roman</option>
+                                            <option value="'Courier New', monospace">Courier New</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="baseFontSize" class="form-label">Base Font Size</label>
+                                        <select class="form-select" id="baseFontSize">
+                                            <option value="14px">Small (14px)</option>
+                                            <option value="16px" selected>Medium (16px)</option>
+                                            <option value="18px">Large (18px)</option>
+                                            <option value="20px">X-Large (20px)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- Live Preview -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Live Preview</h6>
+                            </div>
+                            <div class="card-body" id="themePreview">
+                                <div class="preview-container">
+                                    <nav class="navbar navbar-dark mb-3" id="previewNavbar">
+                                        <div class="container-fluid">
+                                            <span class="navbar-brand">
+                                                <i class="fas fa-boxes me-2"></i>APK System
+                                            </span>
+                                        </div>
+                                    </nav>
+                                    
+                                    <div class="preview-content">
+                                        <h4 class="preview-heading">Dashboard</h4>
+                                        <p class="preview-text">This is how your theme will look in the application.</p>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <div class="card preview-card text-white">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Primary Card</h6>
+                                                        <p class="card-text">Sample content</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card preview-card-secondary">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">Secondary Card</h6>
+                                                        <p class="card-text">Sample content</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="btn-group mb-3" role="group">
+                                            <button type="button" class="btn preview-btn-primary">Primary</button>
+                                            <button type="button" class="btn preview-btn-success">Success</button>
+                                            <button type="button" class="btn preview-btn-warning">Warning</button>
+                                            <button type="button" class="btn preview-btn-danger">Danger</button>
+                                        </div>
+                                        
+                                        <div class="alert preview-alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            This is an info alert with your theme colors.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTheme()">
+                    <i class="fas fa-save me-1"></i>Save Theme
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Preferences Modal -->
+<div class="modal fade" id="preferencesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">My Preferences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="preferencesForm">
+                    <div class="mb-3">
+                        <label for="userTheme" class="form-label">Theme</label>
+                        <select class="form-select" id="userTheme">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="userFontSize" class="form-label">Font Size</label>
+                        <select class="form-select" id="userFontSize">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                            <option value="x-large">X-Large</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="userHighContrast">
+                        <label class="form-check-label" for="userHighContrast">
+                            High Contrast Mode
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="userDarkMode">
+                        <label class="form-check-label" for="userDarkMode">
+                            Dark Mode
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveUserPreferences()">
+                    <i class="fas fa-save me-1"></i>Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button for User Preferences -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <button type="button" class="btn btn-primary btn-lg rounded-circle" onclick="showUserPreferences()" title="My Preferences">
+        <i class="fas fa-user-cog"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let themes = [];
+let currentTheme = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadThemes();
+    loadUserPreferences();
+    
+    // Add event listeners for live preview
+    const colorInputs = ['primaryColor', 'secondaryColor', 'successColor', 'dangerColor', 'warningColor', 'infoColor', 'backgroundColor', 'textColor'];
+    colorInputs.forEach(inputId => {
+        document.getElementById(inputId).addEventListener('input', updatePreview);
+    });
+    
+    document.getElementById('fontFamily').addEventListener('change', updatePreview);
+    document.getElementById('baseFontSize').addEventListener('change', updatePreview);
+});
+
+function loadThemes() {
+    fetch('/api/themes')
+        .then(response => response.json())
+        .then(data => {
+            themes = data;
+            renderThemes();
+            populateThemeSelects();
+        })
+        .catch(error => {
+            console.error('Error loading themes:', error);
+            showNotification('Error loading themes', 'danger');
+        });
+}
+
+function renderThemes() {
+    const container = document.getElementById('themesContainer');
+    container.innerHTML = '';
+    
+    themes.forEach(theme => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-4';
+        
+        const config = theme.config || {};
+        const primaryColor = config.primaryColor || '#007bff';
+        const backgroundColor = config.backgroundColor || '#ffffff';
+        
+        col.innerHTML = `
+            <div class="card h-100 ${theme.is_default ? 'border-success' : ''}">
+                <div class="card-header d-flex justify-content-between align-items-center" 
+                     style="background-color: ${primaryColor}; color: white;">
+                    <h6 class="mb-0">${theme.display_name}</h6>
+                    ${theme.is_default ? '<span class="badge bg-success">DEFAULT</span>' : ''}
+                </div>
+                <div class="card-body" style="background-color: ${backgroundColor};">
+                    <p class="card-text">${theme.description || 'No description available'}</p>
+                    <div class="color-palette mb-3">
+                        <div class="d-flex gap-1">
+                            <div class="color-swatch" style="background-color: ${config.primaryColor || '#007bff'}" title="Primary"></div>
+                            <div class="color-swatch" style="background-color: ${config.secondaryColor || '#6c757d'}" title="Secondary"></div>
+                            <div class="color-swatch" style="background-color: ${config.successColor || '#28a745'}" title="Success"></div>
+                            <div class="color-swatch" style="background-color: ${config.dangerColor || '#dc3545'}" title="Danger"></div>
+                            <div class="color-swatch" style="background-color: ${config.warningColor || '#ffc107'}" title="Warning"></div>
+                            <div class="color-swatch" style="background-color: ${config.infoColor || '#17a2b8'}" title="Info"></div>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        ${theme.is_system ? 'System Theme' : 'Custom Theme'}
+                    </small>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100">
+                        ${!theme.is_system ? `
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="editTheme(${theme.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        ` : ''}
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="setDefaultTheme(${theme.id})" 
+                                ${theme.is_default ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i> ${theme.is_default ? 'Default' : 'Set Default'}
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="previewTheme(${theme.id})">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(col);
+    });
+}
+
+function populateThemeSelects() {
+    const userThemeSelect = document.getElementById('userTheme');
+    userThemeSelect.innerHTML = '<option value="">System Default</option>';
+    
+    themes.forEach(theme => {
+        const option = document.createElement('option');
+        option.value = theme.id;
+        option.textContent = theme.display_name;
+        userThemeSelect.appendChild(option);
+    });
+}
+
+function showCreateThemeModal() {
+    document.getElementById('themeModalTitle').textContent = 'Create Theme';
+    document.getElementById('themeForm').reset();
+    document.getElementById('themeId').value = '';
+    resetPreview();
+    new bootstrap.Modal(document.getElementById('themeModal')).show();
+}
+
+function editTheme(themeId) {
+    const theme = themes.find(t => t.id === themeId);
+    if (!theme || theme.is_system) return;
+    
+    document.getElementById('themeModalTitle').textContent = 'Edit Theme';
+    document.getElementById('themeId').value = theme.id;
+    document.getElementById('themeName').value = theme.name;
+    document.getElementById('themeDisplayName').value = theme.display_name;
+    document.getElementById('themeDescription').value = theme.description || '';
+    
+    const config = theme.config || {};
+    document.getElementById('primaryColor').value = config.primaryColor || '#007bff';
+    document.getElementById('secondaryColor').value = config.secondaryColor || '#6c757d';
+    document.getElementById('successColor').value = config.successColor || '#28a745';
+    document.getElementById('dangerColor').value = config.dangerColor || '#dc3545';
+    document.getElementById('warningColor').value = config.warningColor || '#ffc107';
+    document.getElementById('infoColor').value = config.infoColor || '#17a2b8';
+    document.getElementById('backgroundColor').value = config.backgroundColor || '#ffffff';
+    document.getElementById('textColor').value = config.textColor || '#212529';
+    document.getElementById('fontFamily').value = config.fontFamily || 'system-ui';
+    document.getElementById('baseFontSize').value = config.baseFontSize || '16px';
+    
+    updatePreview();
+    new bootstrap.Modal(document.getElementById('themeModal')).show();
+}
+
+function updatePreview() {
+    const config = {
+        primaryColor: document.getElementById('primaryColor').value,
+        secondaryColor: document.getElementById('secondaryColor').value,
+        successColor: document.getElementById('successColor').value,
+        dangerColor: document.getElementById('dangerColor').value,
+        warningColor: document.getElementById('warningColor').value,
+        infoColor: document.getElementById('infoColor').value,
+        backgroundColor: document.getElementById('backgroundColor').value,
+        textColor: document.getElementById('textColor').value,
+        fontFamily: document.getElementById('fontFamily').value,
+        baseFontSize: document.getElementById('baseFontSize').value
+    };
+    
+    const preview = document.getElementById('themePreview');
+    preview.style.fontFamily = config.fontFamily;
+    preview.style.fontSize = config.baseFontSize;
+    preview.style.backgroundColor = config.backgroundColor;
+    preview.style.color = config.textColor;
+    
+    // Update navbar
+    const navbar = document.getElementById('previewNavbar');
+    navbar.style.backgroundColor = config.primaryColor;
+    
+    // Update cards
+    const primaryCard = preview.querySelector('.preview-card');
+    primaryCard.style.backgroundColor = config.primaryColor;
+    
+    const secondaryCard = preview.querySelector('.preview-card-secondary');
+    secondaryCard.style.backgroundColor = config.secondaryColor;
+    secondaryCard.style.color = 'white';
+    
+    // Update buttons
+    const primaryBtn = preview.querySelector('.preview-btn-primary');
+    primaryBtn.style.backgroundColor = config.primaryColor;
+    primaryBtn.style.borderColor = config.primaryColor;
+    
+    const successBtn = preview.querySelector('.preview-btn-success');
+    successBtn.style.backgroundColor = config.successColor;
+    successBtn.style.borderColor = config.successColor;
+    
+    const warningBtn = preview.querySelector('.preview-btn-warning');
+    warningBtn.style.backgroundColor = config.warningColor;
+    warningBtn.style.borderColor = config.warningColor;
+    
+    const dangerBtn = preview.querySelector('.preview-btn-danger');
+    dangerBtn.style.backgroundColor = config.dangerColor;
+    dangerBtn.style.borderColor = config.dangerColor;
+    
+    // Update alert
+    const alert = preview.querySelector('.preview-alert-info');
+    alert.style.backgroundColor = config.infoColor + '20';
+    alert.style.borderColor = config.infoColor;
+    alert.style.color = config.textColor;
+}
+
+function resetPreview() {
+    const defaults = {
+        primaryColor: '#007bff',
+        secondaryColor: '#6c757d',
+        successColor: '#28a745',
+        dangerColor: '#dc3545',
+        warningColor: '#ffc107',
+        infoColor: '#17a2b8',
+        backgroundColor: '#ffffff',
+        textColor: '#212529',
+        fontFamily: 'system-ui',
+        baseFontSize: '16px'
+    };
+    
+    Object.keys(defaults).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) element.value = defaults[key];
+    });
+    
+    updatePreview();
+}
+
+function saveTheme() {
+    const themeId = document.getElementById('themeId').value;
+    const isEdit = themeId !== '';
+    
+    const config = {
+        primaryColor: document.getElementById('primaryColor').value,
+        secondaryColor: document.getElementById('secondaryColor').value,
+        successColor: document.getElementById('successColor').value,
+        dangerColor: document.getElementById('dangerColor').value,
+        warningColor: document.getElementById('warningColor').value,
+        infoColor: document.getElementById('infoColor').value,
+        backgroundColor: document.getElementById('backgroundColor').value,
+        textColor: document.getElementById('textColor').value,
+        fontFamily: document.getElementById('fontFamily').value,
+        baseFontSize: document.getElementById('baseFontSize').value
+    };
+    
+    const themeData = {
+        name: document.getElementById('themeName').value.toLowerCase().replace(/\s+/g, '-'),
+        display_name: document.getElementById('themeDisplayName').value,
+        description: document.getElementById('themeDescription').value,
+        config: config
+    };
+    
+    const url = isEdit ? `/api/themes/${themeId}` : '/api/themes';
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(themeData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('themeModal')).hide();
+            loadThemes();
+        } else {
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving theme:', error);
+        showNotification('Error saving theme', 'danger');
+    });
+}
+
+function setDefaultTheme(themeId) {
+    fetch(`/api/themes/${themeId}/set-default`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            loadThemes();
+        } else {
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error setting default theme:', error);
+        showNotification('Error setting default theme', 'danger');
+    });
+}
+
+function previewTheme(themeId) {
+    const theme = themes.find(t => t.id === themeId);
+    if (!theme) return;
+    
+    // Apply theme temporarily for preview
+    applyThemeToPage(theme.config || {});
+    
+    // Show notification with option to apply permanently
+    showNotification(`Previewing "${theme.display_name}". <a href="#" onclick="applyThemePermanently(${themeId})" class="alert-link">Apply permanently</a>`, 'info');
+}
+
+function applyThemeToPage(config) {
+    const root = document.documentElement;
+    root.style.setProperty('--bs-primary', config.primaryColor || '#007bff');
+    root.style.setProperty('--bs-secondary', config.secondaryColor || '#6c757d');
+    root.style.setProperty('--bs-success', config.successColor || '#28a745');
+    root.style.setProperty('--bs-danger', config.dangerColor || '#dc3545');
+    root.style.setProperty('--bs-warning', config.warningColor || '#ffc107');
+    root.style.setProperty('--bs-info', config.infoColor || '#17a2b8');
+    root.style.setProperty('--bs-body-bg', config.backgroundColor || '#ffffff');
+    root.style.setProperty('--bs-body-color', config.textColor || '#212529');
+    
+    if (config.fontFamily) {
+        document.body.style.fontFamily = config.fontFamily;
+    }
+    if (config.baseFontSize) {
+        document.body.style.fontSize = config.baseFontSize;
+    }
+}
+
+function showUserPreferences() {
+    loadUserPreferences();
+    new bootstrap.Modal(document.getElementById('preferencesModal')).show();
+}
+
+function loadUserPreferences() {
+    fetch('/api/user/preferences')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('userTheme').value = data.theme_id || '';
+            document.getElementById('userFontSize').value = data.font_size || 'medium';
+            document.getElementById('userHighContrast').checked = data.high_contrast || false;
+            document.getElementById('userDarkMode').checked = data.dark_mode || false;
+        })
+        .catch(error => {
+            console.error('Error loading user preferences:', error);
+        });
+}
+
+function saveUserPreferences() {
+    const preferences = {
+        theme_id: document.getElementById('userTheme').value || null,
+        font_size: document.getElementById('userFontSize').value,
+        high_contrast: document.getElementById('userHighContrast').checked,
+        dark_mode: document.getElementById('userDarkMode').checked
+    };
+    
+    fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferences)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('preferencesModal')).hide();
+            // Apply preferences immediately
+            applyUserPreferences(preferences);
+        } else {
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving preferences:', error);
+        showNotification('Error saving preferences', 'danger');
+    });
+}
+
+function applyUserPreferences(preferences) {
+    // Apply font size
+    const fontSizeMap = {
+        'small': '14px',
+        'medium': '16px',
+        'large': '18px',
+        'x-large': '20px'
+    };
+    document.body.style.fontSize = fontSizeMap[preferences.font_size] || '16px';
+    
+    // Apply high contrast
+    if (preferences.high_contrast) {
+        document.body.classList.add('high-contrast');
+    } else {
+        document.body.classList.remove('high-contrast');
+    }
+    
+    // Apply dark mode
+    if (preferences.dark_mode) {
+        document.body.setAttribute('data-bs-theme', 'dark');
+    } else {
+        document.body.removeAttribute('data-bs-theme');
+    }
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('main');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 8 seconds for info alerts
+    if (type === 'info') {
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 8000);
+    } else {
+        // Auto-dismiss after 5 seconds for other alerts
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+}
+</script>
+
+<style>
+.color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+}
+
+.preview-container {
+    min-height: 400px;
+}
+
+.preview-heading {
+    color: inherit;
+}
+
+.preview-text {
+    color: inherit;
+}
+
+.preview-card {
+    border: none;
+}
+
+.preview-card-secondary {
+    border: none;
+}
+
+.preview-btn-primary,
+.preview-btn-success,
+.preview-btn-warning,
+.preview-btn-danger {
+    color: white;
+    border: none;
+}
+
+.preview-alert-info {
+    border: 1px solid;
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* High contrast mode */
+.high-contrast {
+    filter: contrast(150%);
+}
+
+.high-contrast .card {
+    border: 2px solid #000;
+}
+
+.high-contrast .btn {
+    border: 2px solid #000;
+}
+</style>
+{% endblock %}
