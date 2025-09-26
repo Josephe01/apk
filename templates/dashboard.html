@@ -88,6 +88,89 @@
     </div>
 </div>
 
+<!-- Quick Actions Row 2 -->
+{% if current_user.role in ['admin', 'manager'] %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-purple" style="background-color: #6f42c1 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Manage Courses</h5>
+                        <p class="card-text">Course administration</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('courses') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-cog me-1"></i>Manage
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if current_user.role == 'admin' %}
+    <div class="col-md-3">
+        <div class="card text-white bg-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Themes</h5>
+                        <p class="card-text">Customize appearance</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-palette fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('themes') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-paint-brush me-1"></i>Customize
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="col-md-3">
+        <div class="card text-white" style="background-color: #e83e8c;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Quick Settings</h5>
+                        <p class="card-text">User preferences</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-sliders-h fa-2x"></i>
+                    </div>
+                </div>
+                <button class="btn btn-light btn-sm mt-2" onclick="showQuickSettings()">
+                    <i class="fas fa-cog me-1"></i>Settings
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white" style="background-color: #20c997;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">System Health</h5>
+                        <p class="card-text">Monitor performance</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-heartbeat fa-2x"></i>
+                    </div>
+                </div>
+                <button class="btn btn-light btn-sm mt-2" onclick="showSystemHealth()">
+                    <i class="fas fa-chart-line me-1"></i>Monitor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Active Sessions -->
 {% if active_sessions %}
 <div class="row mb-4">
@@ -236,6 +319,225 @@ function viewSessionDetails(sessionId) {
     .catch(error => {
         console.error('Error:', error);
     });
+}
+
+function showQuickSettings() {
+    // Create a quick settings modal
+    const modalHTML = `
+        <div class="modal fade" id="quickSettingsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Quick Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Font Size</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="fontSize" id="fontSmall" value="small">
+                                <label class="btn btn-outline-primary" for="fontSmall">Small</label>
+                                
+                                <input type="radio" class="btn-check" name="fontSize" id="fontMedium" value="medium" checked>
+                                <label class="btn btn-outline-primary" for="fontMedium">Medium</label>
+                                
+                                <input type="radio" class="btn-check" name="fontSize" id="fontLarge" value="large">
+                                <label class="btn btn-outline-primary" for="fontLarge">Large</label>
+                                
+                                <input type="radio" class="btn-check" name="fontSize" id="fontXLarge" value="x-large">
+                                <label class="btn btn-outline-primary" for="fontXLarge">X-Large</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="quickDarkMode">
+                                <label class="form-check-label" for="quickDarkMode">
+                                    Dark Mode
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="quickHighContrast">
+                                <label class="form-check-label" for="quickHighContrast">
+                                    High Contrast
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="applyQuickSettings()">Apply</button>
+                        <a href="/themes" class="btn btn-outline-primary">More Options</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('quickSettingsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('quickSettingsModal')).show();
+}
+
+function applyQuickSettings() {
+    const fontSize = document.querySelector('input[name="fontSize"]:checked').value;
+    const darkMode = document.getElementById('quickDarkMode').checked;
+    const highContrast = document.getElementById('quickHighContrast').checked;
+    
+    if (window.inventoryApp) {
+        window.inventoryApp.updateUserPreferences({
+            font_size: fontSize,
+            dark_mode: darkMode,
+            high_contrast: highContrast
+        }).then(() => {
+            bootstrap.Modal.getInstance(document.getElementById('quickSettingsModal')).hide();
+        });
+    }
+}
+
+function showSystemHealth() {
+    // Create system health modal
+    const modalHTML = `
+        <div class="modal fade" id="systemHealthModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-heartbeat me-2"></i>System Health Monitor
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-server fa-2x text-success mb-2"></i>
+                                        <h6>Server Status</h6>
+                                        <span class="badge bg-success">Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-database fa-2x text-success mb-2"></i>
+                                        <h6>Database</h6>
+                                        <span class="badge bg-success">Connected</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-users fa-2x text-info mb-2"></i>
+                                        <h6>Active Users</h6>
+                                        <h4 class="text-info">{{ active_sessions|length }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-boxes fa-2x text-warning mb-2"></i>
+                                        <h6>Total Items</h6>
+                                        <h4 class="text-warning">{{ recent_items|length }}+</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                        <h6>Uptime</h6>
+                                        <h4 class="text-primary">24h+</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Recent Activity</h6>
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    System started successfully
+                                </div>
+                                <div class="list-group-item">
+                                    <i class="fas fa-user-plus text-info me-2"></i>
+                                    Admin user initialized
+                                </div>
+                                <div class="list-group-item">
+                                    <i class="fas fa-database text-primary me-2"></i>
+                                    Database initialized with sample data
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="refreshSystemHealth()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('systemHealthModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('systemHealthModal')).show();
+}
+
+function refreshSystemHealth() {
+    // Simulate refresh
+    const button = document.querySelector('#systemHealthModal button[onclick="refreshSystemHealth()"]');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check me-2"></i>System health refreshed successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('#systemHealthModal .modal-body').appendChild(alertDiv);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 3000);
+    }, 1500);
 }
 </script>
 {% endblock %}

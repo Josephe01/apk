@@ -191,3 +191,176 @@
         break-inside: avoid;
     }
 }
+
+/* Theme Switching and Accessibility */
+:root {
+    --transition-speed: 0.3s;
+}
+
+/* Smooth transitions for theme changes */
+* {
+    transition: background-color var(--transition-speed) ease,
+                color var(--transition-speed) ease,
+                border-color var(--transition-speed) ease;
+}
+
+/* High contrast mode styles */
+.high-contrast {
+    filter: contrast(150%) brightness(110%);
+}
+
+.high-contrast .card {
+    border: 2px solid !important;
+}
+
+.high-contrast .btn {
+    border: 2px solid !important;
+    font-weight: bold;
+}
+
+.high-contrast .table {
+    border: 2px solid !important;
+}
+
+.high-contrast .table td,
+.high-contrast .table th {
+    border: 1px solid !important;
+}
+
+/* Dark mode specific adjustments */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #fff;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: #343a40;
+    --bs-table-color: #fff;
+}
+
+[data-bs-theme="dark"] .navbar-dark {
+    background-color: #000 !important;
+}
+
+/* Theme preview specific styles */
+.color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+    display: inline-block;
+}
+
+.preview-container {
+    min-height: 400px;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.theme-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Accessibility improvements */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Focus indicators for better accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    outline: 2px solid transparent;
+}
+
+/* High contrast focus indicators */
+.high-contrast .btn:focus,
+.high-contrast .form-control:focus,
+.high-contrast .form-select:focus {
+    outline: 3px solid #000;
+    outline-offset: 2px;
+}
+
+/* Course management specific styles */
+.course-status-active {
+    background-color: var(--bs-success);
+}
+
+.course-status-inactive {
+    background-color: var(--bs-secondary);
+}
+
+.course-status-archived {
+    background-color: var(--bs-warning);
+}
+
+/* Theme management specific styles */
+.theme-preview-card {
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease;
+}
+
+.theme-preview-card:hover {
+    border-color: var(--bs-primary);
+}
+
+.theme-default {
+    border-color: var(--bs-success) !important;
+}
+
+/* User preferences modal styles */
+.preferences-section {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.preferences-section:last-child {
+    border-bottom: none;
+}
+
+/* Responsive theme grid */
+@media (max-width: 768px) {
+    .color-swatch {
+        width: 15px;
+        height: 15px;
+    }
+    
+    .theme-card .btn-group {
+        flex-direction: column;
+    }
+    
+    .theme-card .btn {
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Animation for theme application */
+.theme-applying {
+    animation: themeTransition 0.5s ease-in-out;
+}
+
+@keyframes themeTransition {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}

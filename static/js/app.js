@@ -15,6 +15,7 @@ class InventoryApp {
         this.initWebSocket();
         this.setupEventListeners();
         this.checkActiveSession();
+        this.loadUserPreferences();
     }
 
     initWebSocket() {
@@ -52,6 +53,18 @@ class InventoryApp {
 
         this.socket.on('discrepancy_found', (data) => {
             this.showNotification(`Discrepancy found: ${data.item_name} (${data.discrepancy})`, 'warning');
+        });
+
+        // Theme update events
+        this.socket.on('theme_updated', (data) => {
+            if (data.user_id === this.currentUser.id || data.is_global) {
+                this.applyTheme(data.theme_config);
+                this.showNotification('Theme updated', 'info');
+            }
+        });
+
+        this.socket.on('preferences_updated', (data) => {
+            this.applyUserPreferences(data);
         });
     }
 
@@ -269,6 +282,117 @@ class InventoryApp {
             }
         } catch (error) {
             this.showNotification(`Scan error: ${error.message}`, 'danger');
+            throw error;
+        }
+    }
+
+    // Theme Management Methods
+    async loadUserPreferences() {
+        try {
+            const data = await this.apiCall('/api/user/preferences');
+            this.applyUserPreferences(data);
+            return data;
+        } catch (error) {
+            console.error('Failed to load user preferences:', error);
+            return null;
+        }
+    }
+
+    applyUserPreferences(preferences) {
+        // Apply font size
+        const fontSizeMap = {
+            'small': '14px',
+            'medium': '16px', 
+            'large': '18px',
+            'x-large': '20px'
+        };
+        
+        if (preferences.font_size) {
+            document.body.style.fontSize = fontSizeMap[preferences.font_size] || '16px';
+        }
+
+        // Apply high contrast
+        if (preferences.high_contrast) {
+            document.body.classList.add('high-contrast');
+        } else {
+            document.body.classList.remove('high-contrast');
+        }
+
+        // Apply dark mode
+        if (preferences.dark_mode) {
+            document.body.setAttribute('data-bs-theme', 'dark');
+        } else {
+            document.body.removeAttribute('data-bs-theme');
+        }
+
+        // Apply theme if specified
+        if (preferences.theme_id) {
+            this.loadAndApplyTheme(preferences.theme_id);
+        }
+    }
+
+    async loadAndApplyTheme(themeId) {
+        try {
+            const themes = await this.apiCall('/api/themes');
+            const theme = themes.find(t => t.id == themeId);
+            if (theme && theme.config) {
+                this.applyTheme(theme.config);
+            }
+        } catch (error) {
+            console.error('Failed to load theme:', error);
+        }
+    }
+
+    applyTheme(config) {
+        if (!config) return;
+
+        const root = document.documentElement;
+        
+        // Apply CSS custom properties for Bootstrap variables
+        if (config.primaryColor) root.style.setProperty('--bs-primary', config.primaryColor);
+        if (config.secondaryColor) root.style.setProperty('--bs-secondary', config.secondaryColor);
+        if (config.successColor) root.style.setProperty('--bs-success', config.successColor);
+        if (config.dangerColor) root.style.setProperty('--bs-danger', config.dangerColor);
+        if (config.warningColor) root.style.setProperty('--bs-warning', config.warningColor);
+        if (config.infoColor) root.style.setProperty('--bs-info', config.infoColor);
+        if (config.backgroundColor) root.style.setProperty('--bs-body-bg', config.backgroundColor);
+        if (config.textColor) root.style.setProperty('--bs-body-color', config.textColor);
+
+        // Apply typography
+        if (config.fontFamily) {
+            document.body.style.fontFamily = config.fontFamily;
+        }
+        if (config.baseFontSize) {
+            document.body.style.fontSize = config.baseFontSize;
+        }
+
+        // Store current theme config for persistence
+        this.currentThemeConfig = config;
+    }
+
+    async toggleDarkMode() {
+        const preferences = await this.loadUserPreferences();
+        if (preferences) {
+            const newDarkMode = !preferences.dark_mode;
+            this.updateUserPreferences({ dark_mode: newDarkMode });
+        }
+    }
+
+    async updateUserPreferences(updates) {
+        try {
+            const data = await this.apiCall('/api/user/preferences', {
+                method: 'PUT',
+                body: JSON.stringify(updates)
+            });
+            
+            if (data.success) {
+                this.showNotification('Preferences updated', 'success');
+                return data;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            this.showNotification(`Failed to update preferences: ${error.message}`, 'danger');
             throw error;
         }
     }
