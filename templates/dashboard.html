@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Start Audit</h5>
+                        <p class="card-text">Begin inventory check</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                </div>
+                <button class="btn btn-light btn-sm mt-2" onclick="startAudit()">
+                    <i class="fas fa-play me-1"></i>Start Now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Inventory Items</h5>
+                        <p class="card-text">{{ recent_items|length }} items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('inventory') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-eye me-1"></i>View All
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Active Sessions</h5>
+                        <p class="card-text">{{ active_sessions|length }} running</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+                <button class="btn btn-light btn-sm mt-2" onclick="viewActiveSessions()">
+                    <i class="fas fa-list me-1"></i>View Details
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Reports</h5>
+                        <p class="card-text">Session summaries</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-bar fa-2x"></i>
+                    </div>
+                </div>
+                <a href="/reports" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-download me-1"></i>Generate
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Sessions -->
+{% if active_sessions %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h3><i class="fas fa-broadcast-tower me-2"></i>Active Audit Sessions</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Started</th>
+                        <th>Items Scanned</th>
+                        <th>Discrepancies</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in active_sessions %}
+                    <tr>
+                        <td>
+                            <i class="fas fa-user me-1"></i>{{ session.user.username }}
+                            <span class="badge bg-secondary ms-1">{{ session.user.role }}</span>
+                        </td>
+                        <td>{{ session.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td><span class="badge bg-primary">{{ session.items_scanned }}</span></td>
+                        <td><span class="badge bg-warning">{{ session.discrepancies_found }}</span></td>
+                        <td><span class="badge bg-success">{{ session.status.upper() }}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewSessionDetails('{{ session.session_id }}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Items -->
+<div class="row">
+    <div class="col-12">
+        <h3><i class="fas fa-clock me-2"></i>Recently Updated Items</h3>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
+                        <th>Discrepancy</th>
+                        <th>Location</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td><code>{{ item.sku }}</code></td>
+                        <td>{{ item.expected_quantity }}</td>
+                        <td>{{ item.actual_quantity }}</td>
+                        <td>
+                            {% set diff = item.actual_quantity - item.expected_quantity %}
+                            {% if diff == 0 %}
+                                <span class="badge bg-success">0</span>
+                            {% elif diff > 0 %}
+                                <span class="badge bg-info">+{{ diff }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ diff }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.location }}</td>
+                        <td>{{ item.last_updated.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="sessionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Session Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="sessionModalBody">
+                <!-- Session details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function startAudit() {
+    fetch('/start_audit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Audit session started successfully!');
+            window.location.href = '/audit/' + data.session_id;
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to start audit session');
+    });
+}
+
+function viewActiveSessions() {
+    // Show modal with active sessions details
+    alert('Active sessions detail view - to be implemented');
+}
+
+function viewSessionDetails(sessionId) {
+    // Load session details in modal
+    fetch('/api/session/' + sessionId)
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('sessionModalBody').innerHTML = `
+            <p><strong>Session ID:</strong> ${data.session_id}</p>
+            <p><strong>User:</strong> ${data.user}</p>
+            <p><strong>Started:</strong> ${data.start_time}</p>
+            <p><strong>Items Scanned:</strong> ${data.items_scanned}</p>
+            <p><strong>Discrepancies:</strong> ${data.discrepancies_found}</p>
+        `;
+        new bootstrap.Modal(document.getElementById('sessionModal')).show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}
