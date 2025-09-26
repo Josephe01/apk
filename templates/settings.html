@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-cog me-2"></i>System Settings</h1>
+        <p class="text-muted">Customize the appearance and functionality of the inventory system.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-palette me-2"></i>Theme & Appearance</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Theme Selection -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Theme Selection</strong></label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card theme-card {% if settings.theme == 'light' %}border-primary{% endif %}" style="cursor: pointer;">
+                                    <div class="card-body text-center">
+                                        <div class="theme-preview light-theme mb-2">
+                                            <div class="d-flex">
+                                                <div class="bg-light border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-white border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-primary rounded" style="width: 30px; height: 20px;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="theme" value="light" id="theme-light"
+                                                   {% if settings.theme == 'light' %}checked{% endif %}>
+                                            <label class="form-check-label" for="theme-light">
+                                                <strong>Light Theme</strong><br>
+                                                <small class="text-muted">Clean and bright interface</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card theme-card {% if settings.theme == 'dark' %}border-primary{% endif %}" style="cursor: pointer;">
+                                    <div class="card-body text-center">
+                                        <div class="theme-preview dark-theme mb-2">
+                                            <div class="d-flex">
+                                                <div class="bg-dark border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-secondary border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-primary rounded" style="width: 30px; height: 20px;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="theme" value="dark" id="theme-dark"
+                                                   {% if settings.theme == 'dark' %}checked{% endif %}>
+                                            <label class="form-check-label" for="theme-dark">
+                                                <strong>Dark Theme</strong><br>
+                                                <small class="text-muted">Easy on the eyes</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card theme-card {% if settings.theme == 'blue' %}border-primary{% endif %}" style="cursor: pointer;">
+                                    <div class="card-body text-center">
+                                        <div class="theme-preview blue-theme mb-2">
+                                            <div class="d-flex">
+                                                <div class="bg-info border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-primary border rounded me-1" style="width: 30px; height: 20px;"></div>
+                                                <div class="bg-dark rounded" style="width: 30px; height: 20px;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="theme" value="blue" id="theme-blue"
+                                                   {% if settings.theme == 'blue' %}checked{% endif %}>
+                                            <label class="form-check-label" for="theme-blue">
+                                                <strong>Blue Theme</strong><br>
+                                                <small class="text-muted">Professional blue tones</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Icon Set Selection -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Icon Set</strong></label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card icon-card {% if settings.icon_set == 'fontawesome' %}border-primary{% endif %}" style="cursor: pointer;">
+                                    <div class="card-body text-center">
+                                        <div class="icon-preview mb-2">
+                                            <i class="fas fa-home fa-2x me-2"></i>
+                                            <i class="fas fa-user fa-2x me-2"></i>
+                                            <i class="fas fa-cog fa-2x"></i>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="icon_set" value="fontawesome" id="icons-fa"
+                                                   {% if settings.icon_set == 'fontawesome' %}checked{% endif %}>
+                                            <label class="form-check-label" for="icons-fa">
+                                                <strong>Font Awesome</strong><br>
+                                                <small class="text-muted">Comprehensive icon library</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card icon-card {% if settings.icon_set == 'bootstrap' %}border-primary{% endif %}" style="cursor: pointer;">
+                                    <div class="card-body text-center">
+                                        <div class="icon-preview mb-2">
+                                            <i class="bi bi-house-fill fs-2 me-2"></i>
+                                            <i class="bi bi-person-fill fs-2 me-2"></i>
+                                            <i class="bi bi-gear-fill fs-2"></i>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="icon_set" value="bootstrap" id="icons-bs"
+                                                   {% if settings.icon_set == 'bootstrap' %}checked{% endif %}>
+                                            <label class="form-check-label" for="icons-bs">
+                                                <strong>Bootstrap Icons</strong><br>
+                                                <small class="text-muted">Clean and modern icons</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewTheme()">
+                                <i class="fas fa-eye me-1"></i>Preview
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>Current Settings</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Theme:</strong> <span class="badge bg-secondary">{{ settings.theme.title() }}</span></li>
+                    <li><strong>Icons:</strong> <span class="badge bg-secondary">{{ settings.icon_set.title() }}</span></li>
+                    <li><strong>Last Updated:</strong> <small>{{ settings.updated_at.strftime('%Y-%m-%d %H:%M') if settings.updated_at else 'Never' }}</small></li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Theme Features</h6>
+                <ul class="small">
+                    <li><strong>Light:</strong> Bright, clean interface with high contrast</li>
+                    <li><strong>Dark:</strong> Dark background, ideal for low-light environments</li>
+                    <li><strong>Blue:</strong> Professional blue color scheme</li>
+                </ul>
+                
+                <h6>Icon Sets</h6>
+                <ul class="small">
+                    <li><strong>Font Awesome:</strong> 6,000+ icons with solid and regular styles</li>
+                    <li><strong>Bootstrap Icons:</strong> 1,800+ clean, modern SVG icons</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Make theme cards clickable
+document.querySelectorAll('.theme-card').forEach(card => {
+    card.addEventListener('click', function() {
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+            // Remove border from all theme cards
+            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('border-primary'));
+            // Add border to selected card
+            this.classList.add('border-primary');
+        }
+    });
+});
+
+// Make icon cards clickable
+document.querySelectorAll('.icon-card').forEach(card => {
+    card.addEventListener('click', function() {
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+            // Remove border from all icon cards
+            document.querySelectorAll('.icon-card').forEach(c => c.classList.remove('border-primary'));
+            // Add border to selected card
+            this.classList.add('border-primary');
+        }
+    });
+});
+
+function previewTheme() {
+    const selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+    const selectedIcons = document.querySelector('input[name="icon_set"]:checked').value;
+    
+    // Apply theme preview temporarily
+    document.body.className = `theme-${selectedTheme}`;
+    
+    // Show preview notification
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+    alert.innerHTML = `
+        <strong>Preview Mode:</strong> ${selectedTheme.charAt(0).toUpperCase() + selectedTheme.slice(1)} theme with ${selectedIcons.charAt(0).toUpperCase() + selectedIcons.slice(1)} icons
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Remove preview after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+            document.body.className = '';
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

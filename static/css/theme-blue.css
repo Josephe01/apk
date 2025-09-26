@@ -1,0 +1,151 @@
+/* Blue Theme Styles */
+body {
+    background-color: #f8fafc;
+    color: #1a202c;
+}
+
+/* Navigation */
+.navbar-dark {
+    background-color: #1e3a8a !important;
+}
+
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff !important;
+}
+
+/* Cards */
+.card {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    background-color: #ebf4ff;
+    border-bottom-color: #bee3f8;
+    color: #1e3a8a;
+}
+
+/* Primary Color Overrides */
+.bg-primary {
+    background-color: #1e3a8a !important;
+}
+
+.btn-primary {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-primary:hover {
+    background-color: #1e40af;
+    border-color: #1e40af;
+}
+
+.btn-outline-primary {
+    color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+/* Tables */
+.table th {
+    background-color: #ebf4ff;
+    color: #1e3a8a;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 58, 138, 0.1);
+}
+
+/* Forms */
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+
+/* Badges */
+.badge.bg-primary {
+    background-color: #1e3a8a !important;
+}
+
+.badge.bg-info {
+    background-color: #0369a1 !important;
+}
+
+/* Quick Action Cards */
+.card.bg-primary {
+    background-color: #1e3a8a !important;
+}
+
+.card.bg-info {
+    background-color: #0369a1 !important;
+}
+
+.card.bg-success {
+    background-color: #059669 !important;
+}
+
+.card.bg-warning {
+    background-color: #d97706 !important;
+}
+
+/* Audit Banner */
+#audit-banner {
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+}
+
+/* Links */
+a {
+    color: #1e3a8a;
+}
+
+a:hover {
+    color: #1e40af;
+}
+
+/* Borders and Accents */
+.border-primary {
+    border-color: #1e3a8a !important;
+}
+
+/* Progress and Loading States */
+.pulse {
+    animation: pulse-blue 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-blue {
+    from { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.4);
+    }
+    to { 
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(30, 58, 138, 0);
+    }
+}
+
+/* Additional Blue Theme Specific Styles */
+.text-primary {
+    color: #1e3a8a !important;
+}
+
+.btn-info {
+    background-color: #0369a1;
+    border-color: #0369a1;
+}
+
+.btn-info:hover {
+    background-color: #0284c7;
+    border-color: #0284c7;
+}
