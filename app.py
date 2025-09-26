@@ -84,6 +84,66 @@ class AuditLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
 
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    instructor = db.Column(db.String(100))
+    department = db.Column(db.String(100))
+    credits = db.Column(db.Integer, default=3)
+    capacity = db.Column(db.Integer, default=30)
+    enrolled = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default='active')  # active, inactive, archived
+    start_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # JSON field for additional course data
+    course_data = db.Column(db.JSON)
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_courses', lazy=True)
+
+class Theme(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    display_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    is_default = db.Column(db.Boolean, default=False)
+    is_system = db.Column(db.Boolean, default=True)  # System themes vs custom themes
+    status = db.Column(db.String(20), default='active')  # active, inactive
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Theme configuration as JSON
+    config = db.Column(db.JSON)  # Contains colors, fonts, spacing, etc.
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_themes', lazy=True)
+    user_preferences = db.relationship('UserPreference', backref='theme', lazy=True)
+
+class UserPreference(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    theme_id = db.Column(db.Integer, db.ForeignKey('theme.id'))
+    
+    # Individual preferences
+    font_size = db.Column(db.String(20), default='medium')  # small, medium, large, x-large
+    high_contrast = db.Column(db.Boolean, default=False)
+    dark_mode = db.Column(db.Boolean, default=False)
+    
+    # Custom icon preferences
+    custom_icons = db.Column(db.JSON)  # Stores custom icon mappings
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='preferences', lazy=True)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -423,6 +483,379 @@ def delete_item(item_id):
     
     return jsonify({'success': True, 'message': 'Item deleted successfully'})
 
+# Course Management Routes
+@app.route('/courses')
+@login_required
+def courses():
+    """Course management page"""
+    if current_user.role not in ['admin', 'manager']:
+        return redirect(url_for('index'))
+    
+    courses = Course.query.all()
+    return render_template('courses.html', courses=courses)
+
+@app.route('/api/courses', methods=['GET'])
+@login_required  
+def get_courses():
+    """Get all courses"""
+    courses = Course.query.all()
+    return jsonify([{
+        'id': course.id,
+        'name': course.name,
+        'code': course.code,
+        'description': course.description,
+        'instructor': course.instructor,
+        'department': course.department,
+        'credits': course.credits,
+        'capacity': course.capacity,
+        'enrolled': course.enrolled,
+        'status': course.status,
+        'start_date': course.start_date.isoformat() if course.start_date else None,
+        'end_date': course.end_date.isoformat() if course.end_date else None,
+        'created_at': course.created_at.isoformat(),
+        'updated_at': course.updated_at.isoformat(),
+        'course_data': course.course_data
+    } for course in courses])
+
+@app.route('/api/courses', methods=['POST'])
+@login_required
+def add_course():
+    """Add new course"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    data = request.json
+    
+    # Check if course code already exists
+    existing_course = Course.query.filter_by(code=data['code']).first()
+    if existing_course:
+        return jsonify({'success': False, 'message': 'Course code already exists'}), 400
+    
+    # Parse dates if provided
+    start_date = None
+    end_date = None
+    if data.get('start_date'):
+        try:
+            start_date = datetime.fromisoformat(data['start_date'].replace('Z', '+00:00'))
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid start date format'}), 400
+    
+    if data.get('end_date'):
+        try:
+            end_date = datetime.fromisoformat(data['end_date'].replace('Z', '+00:00'))
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid end date format'}), 400
+    
+    course = Course(
+        name=data['name'],
+        code=data['code'],
+        description=data.get('description', ''),
+        instructor=data.get('instructor', ''),
+        department=data.get('department', ''),
+        credits=data.get('credits', 3),
+        capacity=data.get('capacity', 30),
+        enrolled=data.get('enrolled', 0),
+        status=data.get('status', 'active'),
+        start_date=start_date,
+        end_date=end_date,
+        created_by=current_user.id,
+        course_data=data.get('course_data', {})
+    )
+    
+    db.session.add(course)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Course added successfully', 'course_id': course.id})
+
+@app.route('/api/courses/<int:course_id>', methods=['PUT'])
+@login_required
+def update_course(course_id):
+    """Update course"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    course = Course.query.get_or_404(course_id)
+    data = request.json
+    
+    # Check if course code conflicts with another course
+    if 'code' in data and data['code'] != course.code:
+        existing_course = Course.query.filter_by(code=data['code']).first()
+        if existing_course:
+            return jsonify({'success': False, 'message': 'Course code already exists'}), 400
+    
+    # Update fields
+    for field in ['name', 'code', 'description', 'instructor', 'department', 'credits', 'capacity', 'enrolled', 'status']:
+        if field in data:
+            setattr(course, field, data[field])
+    
+    # Update dates if provided
+    if 'start_date' in data:
+        if data['start_date']:
+            try:
+                course.start_date = datetime.fromisoformat(data['start_date'].replace('Z', '+00:00'))
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid start date format'}), 400
+        else:
+            course.start_date = None
+    
+    if 'end_date' in data:
+        if data['end_date']:
+            try:
+                course.end_date = datetime.fromisoformat(data['end_date'].replace('Z', '+00:00'))
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid end date format'}), 400
+        else:
+            course.end_date = None
+    
+    if 'course_data' in data:
+        course.course_data = data['course_data']
+    
+    course.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Course updated successfully'})
+
+@app.route('/api/courses/<int:course_id>', methods=['DELETE'])
+@login_required
+def delete_course(course_id):
+    """Delete course"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    course = Course.query.get_or_404(course_id)
+    db.session.delete(course)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Course deleted successfully'})
+
+@app.route('/api/courses/export')
+@login_required
+def export_courses():
+    """Export courses as JSON or CSV"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    format_type = request.args.get('format', 'json')
+    courses = Course.query.all()
+    
+    if format_type == 'json':
+        courses_data = []
+        for course in courses:
+            courses_data.append({
+                'id': course.id,
+                'name': course.name,
+                'code': course.code,
+                'description': course.description,
+                'instructor': course.instructor,
+                'department': course.department,
+                'credits': course.credits,
+                'capacity': course.capacity,
+                'enrolled': course.enrolled,
+                'status': course.status,
+                'start_date': course.start_date.isoformat() if course.start_date else None,
+                'end_date': course.end_date.isoformat() if course.end_date else None,
+                'created_at': course.created_at.isoformat(),
+                'updated_at': course.updated_at.isoformat(),
+                'course_data': course.course_data
+            })
+        
+        # Create JSON file
+        json_data = io.StringIO()
+        json.dump(courses_data, json_data, indent=2)
+        buffer = io.BytesIO()
+        buffer.write(json_data.getvalue().encode('utf-8'))
+        buffer.seek(0)
+        
+        return send_file(buffer, 
+                        as_attachment=True, 
+                        download_name=f'courses_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+                        mimetype='application/json')
+    
+    elif format_type == 'csv':
+        # Create CSV file
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['ID', 'Name', 'Code', 'Description', 'Instructor', 'Department', 
+                        'Credits', 'Capacity', 'Enrolled', 'Status', 'Start Date', 'End Date',
+                        'Created At', 'Updated At'])
+        
+        # Write course data
+        for course in courses:
+            writer.writerow([
+                course.id,
+                course.name,
+                course.code,
+                course.description,
+                course.instructor,
+                course.department,
+                course.credits,
+                course.capacity,
+                course.enrolled,
+                course.status,
+                course.start_date.strftime('%Y-%m-%d %H:%M:%S') if course.start_date else '',
+                course.end_date.strftime('%Y-%m-%d %H:%M:%S') if course.end_date else '',
+                course.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                course.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+        
+        buffer = io.BytesIO()
+        buffer.write(output.getvalue().encode('utf-8'))
+        buffer.seek(0)
+        
+        return send_file(buffer,
+                        as_attachment=True,
+                        download_name=f'courses_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                        mimetype='text/csv')
+    
+    else:
+        return jsonify({'error': 'Invalid format. Use json or csv'}), 400
+
+# Theme Management Routes
+@app.route('/themes')
+@login_required
+def themes():
+    """Theme management page"""
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+    
+    themes = Theme.query.all()
+    return render_template('themes.html', themes=themes)
+
+@app.route('/api/themes', methods=['GET'])
+@login_required
+def get_themes():
+    """Get all available themes"""
+    themes = Theme.query.filter_by(status='active').all()
+    return jsonify([{
+        'id': theme.id,
+        'name': theme.name,
+        'display_name': theme.display_name,
+        'description': theme.description,
+        'is_default': theme.is_default,
+        'is_system': theme.is_system,
+        'config': theme.config
+    } for theme in themes])
+
+@app.route('/api/themes', methods=['POST'])
+@login_required  
+def create_theme():
+    """Create new custom theme"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+        
+    data = request.json
+    
+    # Check if theme name already exists
+    existing_theme = Theme.query.filter_by(name=data['name']).first()
+    if existing_theme:
+        return jsonify({'success': False, 'message': 'Theme name already exists'}), 400
+    
+    theme = Theme(
+        name=data['name'],
+        display_name=data['display_name'],
+        description=data.get('description', ''),
+        is_system=False,
+        config=data.get('config', {}),
+        created_by=current_user.id
+    )
+    
+    db.session.add(theme)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Theme created successfully', 'theme_id': theme.id})
+
+@app.route('/api/themes/<int:theme_id>', methods=['PUT'])
+@login_required
+def update_theme(theme_id):
+    """Update theme"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    theme = Theme.query.get_or_404(theme_id)
+    data = request.json
+    
+    # Don't allow modifying system themes
+    if theme.is_system:
+        return jsonify({'success': False, 'message': 'Cannot modify system themes'}), 403
+    
+    # Update fields
+    for field in ['display_name', 'description', 'config']:
+        if field in data:
+            setattr(theme, field, data[field])
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Theme updated successfully'})
+
+@app.route('/api/themes/<int:theme_id>/set-default', methods=['POST'])
+@login_required
+def set_default_theme(theme_id):
+    """Set theme as default"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    # Remove default from all themes
+    Theme.query.update({'is_default': False})
+    
+    # Set new default
+    theme = Theme.query.get_or_404(theme_id)
+    theme.is_default = True
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Default theme updated'})
+
+@app.route('/api/user/preferences', methods=['GET'])
+@login_required
+def get_user_preferences():
+    """Get current user's preferences"""
+    preferences = UserPreference.query.filter_by(user_id=current_user.id).first()
+    
+    if not preferences:
+        # Create default preferences
+        preferences = UserPreference(user_id=current_user.id)
+        db.session.add(preferences)
+        db.session.commit()
+    
+    return jsonify({
+        'theme_id': preferences.theme_id,
+        'font_size': preferences.font_size,
+        'high_contrast': preferences.high_contrast,
+        'dark_mode': preferences.dark_mode,
+        'custom_icons': preferences.custom_icons or {}
+    })
+
+@app.route('/api/user/preferences', methods=['PUT'])
+@login_required
+def update_user_preferences():
+    """Update current user's preferences"""
+    data = request.json
+    
+    preferences = UserPreference.query.filter_by(user_id=current_user.id).first()
+    if not preferences:
+        preferences = UserPreference(user_id=current_user.id)
+        db.session.add(preferences)
+    
+    # Update fields
+    for field in ['theme_id', 'font_size', 'high_contrast', 'dark_mode', 'custom_icons']:
+        if field in data:
+            setattr(preferences, field, data[field])
+    
+    preferences.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    # Emit real-time update to user
+    socketio.emit('preferences_updated', {
+        'theme_id': preferences.theme_id,
+        'font_size': preferences.font_size,
+        'high_contrast': preferences.high_contrast,
+        'dark_mode': preferences.dark_mode
+    }, room=f'user_{current_user.id}')
+    
+    return jsonify({'success': True, 'message': 'Preferences updated successfully'})
+
 @app.route('/api/session/<session_id>/export')
 @login_required
 def export_session_report(session_id):
@@ -570,8 +1003,169 @@ if __name__ == '__main__':
             for item in sample_items:
                 db.session.add(item)
             
+            # Add sample courses
+            sample_courses = [
+                Course(
+                    name='Introduction to Computer Science',
+                    code='CS101',
+                    description='Basic principles of computer science and programming',
+                    instructor='Dr. Smith',
+                    department='Computer Science',
+                    credits=3,
+                    capacity=30,
+                    enrolled=25,
+                    status='active',
+                    created_by=admin.id,
+                    course_data={'level': 'beginner', 'prerequisites': []}
+                ),
+                Course(
+                    name='Data Structures and Algorithms',
+                    code='CS201',
+                    description='Study of data structures and algorithmic problem solving',
+                    instructor='Prof. Johnson',
+                    department='Computer Science',
+                    credits=4,
+                    capacity=25,
+                    enrolled=20,
+                    status='active',
+                    created_by=admin.id,
+                    course_data={'level': 'intermediate', 'prerequisites': ['CS101']}
+                ),
+                Course(
+                    name='Database Management Systems',
+                    code='CS301',
+                    description='Design and implementation of database systems',
+                    instructor='Dr. Williams',
+                    department='Computer Science', 
+                    credits=3,
+                    capacity=20,
+                    enrolled=18,
+                    status='active',
+                    created_by=admin.id,
+                    course_data={'level': 'advanced', 'prerequisites': ['CS201']}
+                ),
+                Course(
+                    name='Web Development Fundamentals',
+                    code='WEB101',
+                    description='HTML, CSS, JavaScript and modern web technologies',
+                    instructor='Ms. Davis',
+                    department='Information Technology',
+                    credits=3,
+                    capacity=35,
+                    enrolled=30,
+                    status='active',
+                    created_by=admin.id,
+                    course_data={'level': 'beginner', 'prerequisites': []}
+                ),
+                Course(
+                    name='Advanced Machine Learning',
+                    code='ML401',
+                    description='Deep learning, neural networks, and AI applications',
+                    instructor='Dr. Brown',
+                    department='Data Science',
+                    credits=4,
+                    capacity=15,
+                    enrolled=12,
+                    status='active',
+                    created_by=admin.id,
+                    course_data={'level': 'advanced', 'prerequisites': ['CS201', 'MATH301']}
+                )
+            ]
+            
+            for course in sample_courses:
+                db.session.add(course)
+            
+            # Add default themes
+            default_themes = [
+                Theme(
+                    name='default',
+                    display_name='Default Theme',
+                    description='The default system theme with standard Bootstrap colors',
+                    is_default=True,
+                    is_system=True,
+                    status='active',
+                    config={
+                        'primaryColor': '#007bff',
+                        'secondaryColor': '#6c757d',
+                        'successColor': '#28a745',
+                        'dangerColor': '#dc3545',
+                        'warningColor': '#ffc107',
+                        'infoColor': '#17a2b8',
+                        'backgroundColor': '#ffffff',
+                        'textColor': '#212529',
+                        'fontFamily': 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                        'baseFontSize': '16px'
+                    }
+                ),
+                Theme(
+                    name='dark',
+                    display_name='Dark Theme',
+                    description='A modern dark theme for better eye comfort',
+                    is_default=False,
+                    is_system=True,
+                    status='active',
+                    config={
+                        'primaryColor': '#0d6efd',
+                        'secondaryColor': '#6c757d',
+                        'successColor': '#198754',
+                        'dangerColor': '#dc3545',
+                        'warningColor': '#ffc107',
+                        'infoColor': '#0dcaf0',
+                        'backgroundColor': '#212529',
+                        'textColor': '#ffffff',
+                        'fontFamily': 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+                        'baseFontSize': '16px'
+                    }
+                ),
+                Theme(
+                    name='professional',
+                    display_name='Professional Theme',
+                    description='A clean, professional theme suitable for business environments',
+                    is_default=False,
+                    is_system=True,
+                    status='active',
+                    config={
+                        'primaryColor': '#2c3e50',
+                        'secondaryColor': '#95a5a6',
+                        'successColor': '#27ae60',
+                        'dangerColor': '#e74c3c',
+                        'warningColor': '#f39c12',
+                        'infoColor': '#3498db',
+                        'backgroundColor': '#ecf0f1',
+                        'textColor': '#2c3e50',
+                        'fontFamily': '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+                        'baseFontSize': '15px'
+                    }
+                ),
+                Theme(
+                    name='high-contrast',
+                    display_name='High Contrast Theme',
+                    description='High contrast theme for improved accessibility',
+                    is_default=False,
+                    is_system=True,
+                    status='active',
+                    config={
+                        'primaryColor': '#000000',
+                        'secondaryColor': '#666666',
+                        'successColor': '#008000',
+                        'dangerColor': '#ff0000',
+                        'warningColor': '#ff8c00',
+                        'infoColor': '#0000ff',
+                        'backgroundColor': '#ffffff',
+                        'textColor': '#000000',
+                        'fontFamily': 'Arial, sans-serif',
+                        'baseFontSize': '18px'
+                    }
+                )
+            ]
+            
+            for theme in default_themes:
+                db.session.add(theme)
+            
             db.session.commit()
             print("Default admin user created (username: admin, password: admin123)")
             print("Sample inventory items added")
+            print("Sample courses added")
+            print("Default themes created")
     
     socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
