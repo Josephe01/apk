@@ -438,7 +438,7 @@ if __name__ == '__main__':
                 db.session.add(role_permission)
             
             # Manager gets inventory and some user permissions
-            manager_permission_names = ['read_user', 'create_inventory', 'read_inventory', 'update_inventory', 'read_logs']
+            manager_permission_names = ['read_user', 'create_inventory', 'read_inventory', 'update_inventory']
             manager_permissions = Permission.query.filter(Permission.name.in_(manager_permission_names)).all()
             for permission in manager_permissions:
                 role_permission = RolePermission(role_id=manager_role.id, permission_id=permission.id)
