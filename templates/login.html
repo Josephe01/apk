@@ -39,6 +39,23 @@
                                 </div>
                             </div>
                             
+                            {% if show_captcha %}
+                            <div class="mb-3">
+                                <label for="captcha" class="form-label">Security Verification</label>
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Additional security verification required due to multiple failed attempts.
+                                </div>
+                                <!-- Placeholder for CAPTCHA widget - will be replaced with actual CAPTCHA service -->
+                                <div class="border rounded p-3 mb-2 bg-light text-center">
+                                    <i class="fas fa-robot fa-2x text-muted mb-2"></i>
+                                    <p class="mb-0 text-muted small">CAPTCHA verification will be implemented here</p>
+                                    <!-- Future: reCAPTCHA or similar service integration -->
+                                </div>
+                                <input type="hidden" name="captcha_response" value="placeholder">
+                            </div>
+                            {% endif %}
+                            
                             <button type="submit" class="btn btn-dark w-100">
                                 <i class="fas fa-sign-in-alt me-2"></i>Login
                             </button>
