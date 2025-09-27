@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 import json
 import os
@@ -31,6 +31,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Login throttling configuration
+MAX_LOGIN_ATTEMPTS = 5  # Maximum failed attempts before lockout
+LOCKOUT_DURATION_MINUTES = 15  # Account lockout duration in minutes
+IP_RATE_LIMIT_ATTEMPTS = 10  # Maximum attempts per IP per hour
+IP_RATE_LIMIT_WINDOW_MINUTES = 60  # IP rate limit window in minutes
+
 # Database Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -40,9 +46,35 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='user')  # admin, manager, user
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Security fields
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    account_locked_until = db.Column(db.DateTime, nullable=True)
+    last_login_attempt = db.Column(db.DateTime, nullable=True)
+    
+    # MFA fields (for future implementation)
+    mfa_enabled = db.Column(db.Boolean, default=False)
+    mfa_secret = db.Column(db.String(32), nullable=True)
+    backup_codes = db.Column(db.Text, nullable=True)  # JSON array of backup codes
+    
+    # Notification preferences (for future implementation)
+    notification_email_enabled = db.Column(db.Boolean, default=True)
+    notification_sms_enabled = db.Column(db.Boolean, default=False)
+    phone_number = db.Column(db.String(20), nullable=True)
+    
     # Relationships
     audit_sessions = db.relationship('AuditSession', backref='user', lazy=True)
     audit_logs = db.relationship('AuditLog', backref='user', lazy=True)
+    login_attempts = db.relationship('LoginAttempt', backref='user', lazy=True)
+
+class LoginAttempt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for failed username attempts
+    username_attempted = db.Column(db.String(80), nullable=False)
+    ip_address = db.Column(db.String(45), nullable=False)  # IPv6 compatible
+    success = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_agent = db.Column(db.String(500), nullable=True)
+    failure_reason = db.Column(db.String(100), nullable=True)  # 'invalid_credentials', 'account_locked', 'throttled'
 
 class InventoryItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -99,6 +131,97 @@ class Settings(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Login throttling helper functions
+def get_client_ip():
+    """Get the real client IP address"""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    elif request.headers.get('X-Real-IP'):
+        return request.headers.get('X-Real-IP')
+    elif request.remote_addr:
+        return request.remote_addr
+    else:
+        return '127.0.0.1'  # Fallback for testing/development
+
+def is_ip_rate_limited(ip_address):
+    """Check if IP address is rate limited"""
+    cutoff_time = datetime.utcnow() - timedelta(minutes=IP_RATE_LIMIT_WINDOW_MINUTES)
+    recent_attempts = LoginAttempt.query.filter(
+        LoginAttempt.ip_address == ip_address,
+        LoginAttempt.timestamp >= cutoff_time
+    ).count()
+    return recent_attempts >= IP_RATE_LIMIT_ATTEMPTS
+
+def is_user_account_locked(user):
+    """Check if user account is locked"""
+    if not user:
+        return False
+    
+    if user.account_locked_until and user.account_locked_until > datetime.utcnow():
+        return True
+    
+    # Clear expired lockout
+    if user.account_locked_until and user.account_locked_until <= datetime.utcnow():
+        user.account_locked_until = None
+        user.failed_login_attempts = 0
+        db.session.commit()
+    
+    return False
+
+def record_login_attempt(username, ip_address, success, user=None, failure_reason=None):
+    """Record a login attempt in the database"""
+    attempt = LoginAttempt(
+        user_id=user.id if user else None,
+        username_attempted=username,
+        ip_address=ip_address,
+        success=success,
+        user_agent=(request.headers.get('User-Agent', '') or '')[:500],
+        failure_reason=failure_reason
+    )
+    db.session.add(attempt)
+    
+    if user:
+        user.last_login_attempt = datetime.utcnow()
+        
+        if success:
+            # Reset failed attempts on successful login
+            user.failed_login_attempts = 0
+            user.account_locked_until = None
+        else:
+            # Increment failed attempts
+            user.failed_login_attempts += 1
+            
+            # Lock account if max attempts reached
+            if user.failed_login_attempts >= MAX_LOGIN_ATTEMPTS:
+                user.account_locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+    
+    db.session.commit()
+
+def send_security_notification(user, event_type, details=None):
+    """Send security notification (placeholder for future implementation)"""
+    # This is a placeholder for future notification system
+    # Will integrate with email/SMS services later
+    print(f"Security notification for user {user.username}: {event_type}")
+    if details:
+        print(f"Details: {details}")
+
+def validate_captcha(captcha_response):
+    """Validate CAPTCHA response (placeholder for future implementation)"""
+    # This is a placeholder for future CAPTCHA integration
+    # Will integrate with services like reCAPTCHA later
+    return True  # Always pass for now
+
+def generate_mfa_token(user):
+    """Generate MFA token (placeholder for future implementation)"""
+    # This is a placeholder for future MFA implementation
+    # Will integrate with authenticator apps later
+    pass
+
+def validate_mfa_token(user, token):
+    """Validate MFA token (placeholder for future implementation)"""
+    # This is a placeholder for future MFA implementation
+    return True  # Always pass for now
+
 # Routes
 @app.route('/')
 def index():
@@ -118,19 +241,108 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """User login"""
+    """Enhanced user login with throttling and security features"""
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        ip_address = get_client_ip()
+        
+        # Check IP rate limiting
+        if is_ip_rate_limited(ip_address):
+            record_login_attempt(username, ip_address, False, failure_reason='ip_rate_limited')
+            return render_template('login.html', 
+                                 error='Too many login attempts from this IP address. Please try again later.',
+                                 show_captcha=True)
+        
+        # Find user
         user = User.query.filter_by(username=username).first()
         
+        # Check if account is locked
+        if user and is_user_account_locked(user):
+            record_login_attempt(username, ip_address, False, user, 'account_locked')
+            lockout_expires = user.account_locked_until.strftime('%H:%M on %B %d, %Y')
+            return render_template('login.html', 
+                                 error=f'Account is locked due to too many failed attempts. Try again after {lockout_expires}.')
+        
+        # Validate credentials
         if user and check_password_hash(user.password_hash, password):
+            # Check if MFA is enabled (future implementation)
+            if user.mfa_enabled:
+                # TODO: Redirect to MFA validation page
+                session['mfa_user_id'] = user.id
+                session['login_validated'] = True
+                return redirect(url_for('mfa_verify'))  # This route will be implemented later
+            
+            # Successful login
+            record_login_attempt(username, ip_address, True, user)
             login_user(user)
+            
+            # Send security notification for successful login
+            send_security_notification(user, 'successful_login', {
+                'ip_address': ip_address,
+                'user_agent': request.headers.get('User-Agent', '')
+            })
+            
             return redirect(url_for('index'))
         else:
+            # Failed login
+            failure_reason = 'invalid_credentials'
+            record_login_attempt(username, ip_address, False, user, failure_reason)
+            
+            if user:
+                # Send notification for failed login attempt
+                send_security_notification(user, 'failed_login', {
+                    'ip_address': ip_address,
+                    'attempts_remaining': MAX_LOGIN_ATTEMPTS - user.failed_login_attempts
+                })
+                
+                # Check if account should show additional security measures
+                attempts_remaining = MAX_LOGIN_ATTEMPTS - user.failed_login_attempts
+                if attempts_remaining <= 2:
+                    return render_template('login.html', 
+                                         error=f'Invalid credentials. {attempts_remaining} attempts remaining before account lockout.',
+                                         show_captcha=True)
+            
             return render_template('login.html', error='Invalid credentials')
     
     return render_template('login.html')
+
+@app.route('/mfa-verify', methods=['GET', 'POST'])
+def mfa_verify():
+    """MFA verification (placeholder for future implementation)"""
+    # Check if user has completed first authentication step
+    if 'mfa_user_id' not in session or not session.get('login_validated'):
+        return redirect(url_for('login'))
+    
+    user = User.query.get(session['mfa_user_id'])
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        mfa_token = request.form.get('mfa_token', '')
+        
+        if validate_mfa_token(user, mfa_token):
+            # Complete login process
+            session.clear()
+            login_user(user)
+            
+            # Log successful MFA verification
+            record_login_attempt(user.username, get_client_ip(), True, user)
+            send_security_notification(user, 'mfa_login_success')
+            
+            return redirect(url_for('index'))
+        else:
+            return render_template('mfa_verify.html', 
+                                 error='Invalid verification code. Please try again.',
+                                 user=user)
+    
+    return render_template('mfa_verify.html', user=user)
+
+@app.route('/security-demo')
+def security_demo():
+    """Security features demonstration page"""
+    return render_template('security_demo.html')
 
 @app.route('/logout')
 @login_required
@@ -615,6 +827,133 @@ def handle_join_room(room):
     if current_user.is_authenticated:
         join_room(room)
         emit('joined_room', {'room': room})
+
+# Security Management API Endpoints
+@app.route('/api/security/login-attempts')
+@login_required
+def get_login_attempts():
+    """Get recent login attempts for current user (admin only)"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 50, type=int), 100)
+    
+    attempts = LoginAttempt.query.order_by(LoginAttempt.timestamp.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return jsonify({
+        'success': True,
+        'attempts': [{
+            'id': attempt.id,
+            'username': attempt.username_attempted,
+            'ip_address': attempt.ip_address,
+            'success': attempt.success,
+            'timestamp': attempt.timestamp.isoformat(),
+            'failure_reason': attempt.failure_reason,
+            'user_agent': attempt.user_agent
+        } for attempt in attempts.items],
+        'pagination': {
+            'page': attempts.page,
+            'pages': attempts.pages,
+            'per_page': attempts.per_page,
+            'total': attempts.total
+        }
+    })
+
+@app.route('/api/security/unlock-account', methods=['POST'])
+@login_required
+def unlock_user_account():
+    """Unlock a user account (admin only)"""
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Insufficient permissions'}), 403
+    
+    user_id = request.json.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': 'User ID required'}), 400
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'message': 'User not found'}), 404
+    
+    # Unlock the account
+    user.failed_login_attempts = 0
+    user.account_locked_until = None
+    db.session.commit()
+    
+    # Send notification
+    send_security_notification(user, 'account_unlocked', {
+        'unlocked_by': current_user.username
+    })
+    
+    return jsonify({
+        'success': True,
+        'message': f'Account {user.username} has been unlocked'
+    })
+
+@app.route('/api/security/mfa/enable', methods=['POST'])
+@login_required
+def enable_mfa():
+    """Enable MFA for current user (placeholder)"""
+    # This is a placeholder for future MFA implementation
+    current_user.mfa_enabled = True
+    db.session.commit()
+    
+    send_security_notification(current_user, 'mfa_enabled')
+    
+    return jsonify({
+        'success': True,
+        'message': 'MFA has been enabled for your account',
+        'note': 'This is a placeholder implementation. Full MFA integration coming soon.'
+    })
+
+@app.route('/api/security/mfa/disable', methods=['POST'])
+@login_required
+def disable_mfa():
+    """Disable MFA for current user (placeholder)"""
+    # This is a placeholder for future MFA implementation
+    current_user.mfa_enabled = False
+    current_user.mfa_secret = None
+    db.session.commit()
+    
+    send_security_notification(current_user, 'mfa_disabled')
+    
+    return jsonify({
+        'success': True,
+        'message': 'MFA has been disabled for your account'
+    })
+
+@app.route('/api/security/notification-preferences', methods=['GET', 'POST'])
+@login_required
+def notification_preferences():
+    """Get or update notification preferences"""
+    if request.method == 'POST':
+        email_enabled = request.json.get('email_enabled', True)
+        sms_enabled = request.json.get('sms_enabled', False)
+        phone_number = request.json.get('phone_number', '')
+        
+        current_user.notification_email_enabled = email_enabled
+        current_user.notification_sms_enabled = sms_enabled
+        if phone_number:
+            current_user.phone_number = phone_number
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Notification preferences updated'
+        })
+    
+    return jsonify({
+        'success': True,
+        'preferences': {
+            'email_enabled': current_user.notification_email_enabled,
+            'sms_enabled': current_user.notification_sms_enabled,
+            'phone_number': current_user.phone_number,
+            'mfa_enabled': current_user.mfa_enabled
+        }
+    })
 
 if __name__ == '__main__':
     with app.app_context():

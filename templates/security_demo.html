@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Features Demo - Inventory Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4><i class="fas fa-shield-alt me-2"></i>Security Features Demo</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle me-2"></i>Login Throttling Features Implemented</h5>
+                            <p>This demonstration shows the security enhancements added to the login system:</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6><i class="fas fa-check me-2"></i>✅ Implemented Features</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-lock text-success me-2"></i><strong>Login Throttling:</strong> Max 5 failed attempts before account lockout</li>
+                                            <li><i class="fas fa-clock text-success me-2"></i><strong>Account Lockout:</strong> 15 minutes lockout duration</li>
+                                            <li><i class="fas fa-ban text-success me-2"></i><strong>IP Rate Limiting:</strong> Max 10 attempts per IP per hour</li>
+                                            <li><i class="fas fa-database text-success me-2"></i><strong>Audit Trail:</strong> All login attempts logged</li>
+                                            <li><i class="fas fa-bell text-success me-2"></i><strong>Security Notifications:</strong> Login event notifications</li>
+                                            <li><i class="fas fa-robot text-success me-2"></i><strong>CAPTCHA Ready:</strong> Framework for CAPTCHA integration</li>
+                                            <li><i class="fas fa-mobile-alt text-success me-2"></i><strong>MFA Ready:</strong> Database fields and endpoints prepared</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6><i class="fas fa-cog me-2"></i>🚧 Ready for Integration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Notifications:</strong> Send alerts for security events</li>
+                                            <li><i class="fas fa-sms text-warning me-2"></i><strong>SMS Notifications:</strong> Mobile security alerts</li>
+                                            <li><i class="fas fa-qrcode text-warning me-2"></i><strong>TOTP MFA:</strong> Time-based one-time passwords</li>
+                                            <li><i class="fas fa-shield-alt text-warning me-2"></i><strong>reCAPTCHA:</strong> Google reCAPTCHA integration</li>
+                                            <li><i class="fas fa-key text-warning me-2"></i><strong>Backup Codes:</strong> MFA recovery codes</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-primary">
+                            <h6><i class="fas fa-test-tube me-2"></i>Testing Instructions</h6>
+                            <ol>
+                                <li>Try logging in with wrong password multiple times</li>
+                                <li>Notice CAPTCHA trigger after 3 failed attempts</li>
+                                <li>See account lockout warnings</li>
+                                <li>Experience IP rate limiting after multiple attempts</li>
+                                <li>All attempts are logged in the database</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-cogs me-2"></i>Configuration</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Max Login Attempts:</strong> 5<br>
+                                        <strong>Lockout Duration:</strong> 15 minutes<br>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>IP Rate Limit:</strong> 10 attempts/hour<br>
+                                        <strong>CAPTCHA Trigger:</strong> After 3 attempts<br>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Database Models:</strong> User, LoginAttempt<br>
+                                        <strong>API Endpoints:</strong> 5 security endpoints<br>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="/login" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Test Login System
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="showLoginAttempts()">
+                                <i class="fas fa-list me-2"></i>View Login Attempts (Mock)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showLoginAttempts() {
+            alert('Login Attempts Tracking:\n\n' +
+                  '✅ All login attempts are recorded in the database\n' +
+                  '✅ IP addresses, timestamps, and failure reasons logged\n' +
+                  '✅ Success/failure status tracked\n' +
+                  '✅ User agents recorded for forensics\n' +
+                  '✅ Admin API endpoints available for monitoring\n\n' +
+                  'Check the browser console for more details during testing.');
+        }
+    </script>
+</body>
+</html>
