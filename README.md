@@ -1,200 +1,160 @@
 # Advanced Inventory Management System
 
-A comprehensive web-based inventory management system with live monitoring, real-time audit capabilities, and user accountability features.
+A web-based inventory management system with robust audit capabilities, real-time notifications, user accountability, and comprehensive reporting. Built using Laravel (PHP), MySQL, and Blade.
 
 ## Features
 
-### 🎯 Core Features
-- **User Authentication & Role Management** - Admin, Manager, and User roles with appropriate permissions
-- **Real-time Inventory Management** - Add, edit, delete, and track inventory items
-- **Live Audit Sessions** - Conduct inventory audits with barcode scanning capability
-- **WebSocket Real-time Updates** - Live monitoring banner during active audit sessions
-- **Session Tracking & Reporting** - Comprehensive audit logs and session summaries
-- **Export Functionality** - Generate PDF and CSV reports of audit sessions
+### Core Features
+- **User Authentication & Role Management:** Admin, Manager, and User roles with secure permissions, password hashing, login throttling, Multi-Factor Authentication (MFA), and CAPTCHA.
+- **Inventory Management:** CRUD operations for inventory items; fields include Name, SKU, Barcode, Category, Location, Expected Quantity, Actual Quantity.
+- **Location Management:** Define/manage locations (warehouses, aisles, shelves), assign products, and track movements.
+- **Bulk Operations:** Add, update, or delete multiple items at once.
+- **Product Images:** Upload, resize, and store images with default placeholders.
+- **Barcode Scanning Integration:** Use mobile cameras or hardware scanners to lookup items.
+- **Stock Adjustment Logs:** Track changes to inventory quantities.
+- **Multi-Warehouse Support:** Track inventory across multiple warehouses.
+- **Real-Time Stock Sync:** Synchronize stock levels across sessions.
+- **Batch Import/Export:** Import/export inventory data from/to CSV/Excel.
+- **Audit and Discrepancy Reports:** Generate reports for mismatched quantities and audit summaries.
+- **Role-Based Inventory Access:** Permissions according to user roles.
 
-### 🔍 Live Monitoring Features
-- **Real-time Banner** - Shows active inventory checks to all users
-- **Live Statistics** - Items scanned, discrepancies found, session duration
-- **User Activity Tracking** - Log all user actions with timestamps
-- **Notification System** - Real-time alerts for key events
-- **Session Summaries** - Detailed reports for administrators
+### Stock Audit
+- Compare actual quantities with expected values.
+- Barcode scanning for fast item identification.
+- Automatic logging of discrepancies with details.
+- Detailed audit reports (PDF/CSV), session summaries, real-time audit progress, and audit logs.
 
-### 📊 Inventory Management
-- **Item Management** - Complete CRUD operations for inventory items
-- **Barcode Support** - Scan or manually enter barcodes/SKUs
-- **Discrepancy Tracking** - Automatic calculation of quantity differences
-- **Search & Filtering** - Find items by name, category, or discrepancy status
-- **Location Tracking** - Track where items are stored
+### Real-Time Notifications
+- Low stock alerts, audit progress, and item changes using Laravel Echo and Pusher.
 
-### 🔐 Security & Access Control
-- **Role-based Access** - Different permissions for different user roles
-- **Session Management** - Secure user authentication with Flask-Login
-- **Audit Logging** - Complete trail of all inventory changes
+### Reports & Logs
+- Exportable PDF and CSV reports.
+- Filterable audit session logs.
+
+### API
+- RESTful endpoint for barcode/SKU search.
+- Dynamic product detail responses.
+
+## Technology Stack
+
+- **Backend:** PHP (Laravel Framework)
+- **Database:** MySQL
+- **Templating Engine:** Blade
+- **Frontend:** HTML5, CSS3, Bootstrap, optional JavaScript libraries
+- **Real-Time:** Laravel Echo, Pusher/WebSockets
+- **PDF Export:** dompdf
+- **Deployment:** Docker & Docker Compose (Unraid server)
+
+## HTTPS Integration (Proposed Solution)
+
+**Steps:**
+1. Integrate HTTPS using a reverse proxy (Nginx or Apache).
+2. Obtain and install an SSL/TLS certificate (Let's Encrypt or commercial CA).
+3. Redirect all HTTP traffic to HTTPS.
+4. Update application settings and documentation to reflect HTTPS usage.
+5. Test all features—including real-time updates—under HTTPS.
+
+**Benefits:**
+- Encrypts communication, protecting sensitive data.
+- Increases user trust, avoids browser warnings.
+- Meets best practices and compliance for user data protection.
+
+**Notes:**
+- Additional configuration may be needed for WebSockets over HTTPS.
+- Replace default credentials before production deployment.
 
 ## Installation
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip (Python package installer)
+- Docker & Docker Compose (recommended)
+- PHP 8.1+ (if installing without Docker)
+- MySQL 8+ (if installing without Docker)
+- Node.js & npm (for frontend assets)
 
-### Setup
+### Quick Start (Docker)
 1. Clone the repository:
    ```bash
    git clone <repository-url>
    cd apk
    ```
-
-2. Install dependencies:
+2. Copy environment file and set parameters:
    ```bash
-   pip install -r requirements.txt
+   cp .env.example .env
+   # Edit .env to set database and mail settings
    ```
-
-3. Run the application:
+3. Build and start containers:
    ```bash
-   python app.py
+   docker-compose up -d
    ```
+4. Run database migrations and seed data:
+   ```bash
+   docker-compose exec app php artisan migrate --seed
+   ```
+5. Access the app at `http://localhost:8000` (or `https://localhost:8000` if HTTPS configured)
 
-4. Access the application at `http://localhost:5000`
+### Manual Installation (without Docker)
+1. Install PHP, MySQL, Composer, and Node.js.
+2. Clone repo, set up `.env`, install dependencies:
+   ```bash
+   composer install
+   npm install && npm run build
+   php artisan migrate --seed
+   php artisan serve
+   ```
+3. Access at `http://localhost:8000`
 
 ### Default Credentials
-- **Username**: `admin`
-- **Password**: `admin123`
+- **Username:** `admin@example.com`
+- **Password:** `admin123`  
+*Change these before production!*
 
 ## Usage
 
-### Starting an Audit Session
-1. Log in to the system
-2. Click "Start Now" on the dashboard or use the navigation menu
-3. Use the barcode scanner or manually enter SKU/barcode
-4. Enter the actual quantity found
-5. Click "Scan" to record the item
-6. Complete the session when finished
-
-### Managing Inventory
-1. Navigate to the "Inventory" section
-2. Use search and filters to find specific items
-3. Add new items using the "Add Item" button
-4. Edit existing items using the action buttons
-5. View discrepancies in the status columns
-
-### Generating Reports
-1. Complete an audit session
-2. Navigate to the "Reports" section
-3. Select the desired session
-4. Choose PDF or CSV export format
-5. Download the generated report
+- **Inventory:** Add, edit, delete, and search inventory items. Assign items to locations.
+- **Audit:** Start audit sessions, scan barcodes, enter actual quantities, log discrepancies.
+- **Reports:** Generate and export PDF/CSV audit summaries.
+- **Notifications:** Receive real-time alerts for inventory events.
+- **API:** Use barcode/SKU endpoints to search for products.
 
 ## System Architecture
 
-### Backend Components
-- **Flask** - Web framework
-- **SQLAlchemy** - Database ORM
-- **Flask-SocketIO** - WebSocket support for real-time updates
-- **Flask-Login** - User session management
-- **ReportLab** - PDF report generation
+- **Backend:** Laravel (MVC), MySQL, Redis (optional for queue/cache)
+- **Frontend:** Blade, Bootstrap, JS libraries
+- **Real-Time:** Laravel Echo + Pusher/WebSockets
+- **PDF/CSV:** dompdf, Laravel export tools
+- **Deployment:** Docker containers
 
-### Database Schema
-- **Users** - User accounts and roles
-- **InventoryItem** - Product catalog
-- **AuditSession** - Audit session tracking
-- **AuditLog** - Detailed action logs
+## API Endpoints (Sample)
+- `POST /api/login` - Authenticate user
+- `GET /api/inventory` - List items
+- `POST /api/inventory` - Add item
+- `PUT /api/inventory/{id}` - Update item
+- `DELETE /api/inventory/{id}` - Delete item
+- `POST /api/audit/start` - Start audit session
+- `POST /api/audit/scan` - Scan item during audit
+- `GET /api/audit/report/{id}` - Export audit report
 
-### Frontend Components
-- **Bootstrap 5** - Responsive UI framework
-- **Socket.IO Client** - Real-time WebSocket communication
-- **Vanilla JavaScript** - Client-side functionality
+## Security Considerations
 
-## API Endpoints
-
-### Authentication
-- `POST /login` - User login
-- `GET /logout` - User logout
-
-### Inventory Management
-- `GET /inventory` - View inventory items
-- `POST /api/item` - Add new item
-- `GET /api/item/<id>` - Get item details
-- `PUT /api/item/<id>` - Update item
-- `DELETE /api/item/<id>` - Delete item
-
-### Audit Sessions
-- `POST /start_audit` - Start new audit session
-- `GET /audit/<session_id>` - Audit interface
-- `POST /api/scan` - Scan item during audit
-- `POST /api/session/<id>/end` - End audit session
-- `GET /api/session/<id>/export` - Export session report
-
-### WebSocket Events
-- `audit_started` - New audit session began
-- `audit_updated` - Session statistics changed
-- `audit_completed` - Session finished
-- `item_scanned` - Item was scanned
-- `discrepancy_found` - Quantity discrepancy detected
-
-## Key Features Implemented
-
-### ✅ User Activity Tracking
-- All user actions are logged with timestamps
-- Session start/end times recorded
-- Audit trail for inventory changes
-
-### ✅ Live Monitoring Window
-- Real-time banner displayed to all users during active audits
-- Dynamic updates via WebSocket connections
-- Session progress tracking (items scanned, discrepancies)
-
-### ✅ Session Summary for Admins
-- Detailed session reports with user info, timestamps, and statistics
-- Export functionality (PDF/CSV)
-- Comprehensive audit logs
-
-### ✅ Notifications
-- Real-time notifications for session events
-- Discrepancy alerts
-- Session completion notifications
-
-### ✅ Role-based Access Control
-- Admin: Full system access
-- Manager: Inventory management and audit control
-- User: Basic inventory viewing and audit participation
-
-## Screenshots
-
-The system includes:
-1. **Login Page** - Secure authentication
-2. **Dashboard** - Overview with quick actions and statistics
-3. **Inventory Management** - Complete item management interface
-4. **Live Audit Interface** - Real-time scanning and tracking
-5. **Live Monitoring Banner** - Visible across all pages during audits
-
-## Technical Notes
-
-### WebSocket Implementation
-- Uses Flask-SocketIO for real-time communication
-- Broadcasting to all connected users
-- Automatic reconnection handling
-
-### Database Design
-- SQLite for development (easily changeable to PostgreSQL/MySQL)
-- Proper foreign key relationships
-- Optimized queries for performance
-
-### Security Considerations
-- Password hashing with Werkzeug
-- Session-based authentication
+- Password hashing, session management, MFA, CAPTCHA
 - Role-based access control
 - Input validation and sanitization
+- Audit logging of inventory changes and user actions
 
 ## Development
 
-### Running in Development Mode
-```bash
-python app.py
-```
-The application will run with debug mode enabled on `http://localhost:5000`.
-
-### Database Initialization
-The application automatically creates the database and adds sample data on first run.
+- **Run Tests:**  
+  ```bash
+  php artisan test
+  ```
+- **Build Frontend:**  
+  ```bash
+  npm run build
+  ```
+- **Database Seeding:**  
+  ```bash
+  php artisan db:seed
+  ```
 
 ## Contributing
 
@@ -206,7 +166,7 @@ The application automatically creates the database and adds sample data on first
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
 
 ## Support
 
