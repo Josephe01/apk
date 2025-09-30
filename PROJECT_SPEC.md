@@ -71,56 +71,58 @@ Whenever you add or change something, update this file so all planning is preser
 ## Database Schema
 
 ### Users
-- id (PK)
-- name
-- email (unique)
-- password (hashed)
-- role (enum: admin, manager, user)
-- timestamps
+- id: BIGINT, primary key, auto-increment
+- name: VARCHAR(100), required
+- email: VARCHAR(150), unique, required
+- password: VARCHAR(255), required (hashed)
+- role: ENUM('admin', 'manager', 'user'), default 'user', required
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
 
 ### InventoryItems
-- id (PK)
-- name
-- sku (unique)
-- barcode (unique, nullable)
-- expected_quantity
-- actual_quantity
-- category
-- location
-- updated_at
-- created_at
+- id: BIGINT, primary key, auto-increment
+- name: VARCHAR(100), required
+- sku: VARCHAR(50), unique, required
+- barcode: VARCHAR(100), unique, nullable
+- expected_quantity: INT, default 0, required
+- actual_quantity: INT, default 0, required
+- category: VARCHAR(50), required
+- location: VARCHAR(100), nullable
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
 
 ### AuditSessions
-- id (PK)
-- session_id (UUID, unique)
-- user_id (FK → users.id)
-- start_time
-- end_time (nullable)
-- status (enum: active, completed, cancelled)
-- items_scanned
-- discrepancies_found
-- notes (nullable)
-- timestamps
+- id: BIGINT, primary key, auto-increment
+- session_id: UUID, unique, required
+- user_id: BIGINT, foreign key → users.id, required
+- start_time: TIMESTAMP, required
+- end_time: TIMESTAMP, nullable
+- status: ENUM('active', 'completed', 'cancelled'), default 'active', required
+- items_scanned: INT, default 0, required
+- discrepancies_found: INT, default 0, required
+- notes: TEXT, nullable
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
 
 ### AuditLogs
-- id (PK)
-- session_id (FK → audit_sessions.id)
-- user_id (FK → users.id)
-- item_id (FK → inventory_items.id)
-- action (enum: scan, adjust, note)
-- old_quantity
-- new_quantity
-- discrepancy
-- timestamp
-- notes (nullable)
+- id: BIGINT, primary key, auto-increment
+- session_id: BIGINT, foreign key → audit_sessions.id, required
+- user_id: BIGINT, foreign key → users.id, required
+- item_id: BIGINT, foreign key → inventory_items.id, required
+- action: ENUM('scan', 'adjust', 'note'), required
+- old_quantity: INT, nullable
+- new_quantity: INT, nullable
+- discrepancy: INT, default 0, required
+- timestamp: TIMESTAMP, required
+- notes: TEXT, nullable
 
 ### Settings
-- id (PK)
-- user_id (FK → users.id)
-- theme (enum: light, dark, blue)
-- icon_set (enum: fontawesome, bootstrap)
-- created_at
-- updated_at
+- id: BIGINT, primary key, auto-increment
+- user_id: BIGINT, foreign key → users.id, required
+- theme: ENUM('light', 'dark', 'blue'), default 'light', required
+- icon_set: ENUM('fontawesome', 'bootstrap'), default 'fontawesome', required
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
 
 #### *Extend as needed:*
 - Notifications
@@ -131,6 +133,14 @@ Whenever you add or change something, update this file so all planning is preser
 - User has many AuditSessions, AuditLogs, Settings  
 - AuditSession has many AuditLogs  
 - InventoryItem has many AuditLogs
+
+**Laravel Migration Notes:**
+- Use `$table->bigIncrements('id')` for primary keys.
+- Use `$table->foreignId('user_id')->constrained()` for relationships.
+- Use `$table->enum('role', ['admin','manager','user'])` for roles.
+- Use `$table->uuid('session_id')->unique()` for UUIDs.
+- Use `$table->string('sku', 50)->unique()` etc. for unique fields.
+- Use `$table->timestamps()` for created_at/updated_at.
 
 ---
 
