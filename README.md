@@ -2,6 +2,30 @@
 
 A web-based inventory management system with robust audit capabilities, real-time notifications, user accountability, and comprehensive reporting. Built using Laravel (PHP), MySQL, and Blade.
 
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [HTTPS Integration (Proposed Solution)](#https-integration-proposed-solution)
+- [Installation](#installation)
+- [Usage](#usage)
+- [System Architecture](#system-architecture)
+- [API Endpoints (Sample)](#api-endpoints-sample)
+- [Security Considerations](#security-considerations)
+- [Development](#development)
+- [Deployment Instructions](./Deployment_Instructions.md)
+- [Automated Testing Expectations](./Automated_Testing_Expectations.md)
+- [Versioning & Branch Strategy](./Versioning_and_Branch_Strategy.md)
+- [Extensibility & Customization](./Extensibility_and_Customization.md)
+- [Contributing](#contributing)
+- [Security Policy](#security-policy)
+- [License](#license)
+- [Support](#support)
+
+---
+
 ## Features
 
 ### Core Features
@@ -35,6 +59,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - RESTful endpoint for barcode/SKU search.
 - Dynamic product detail responses.
 
+---
+
 ## Technology Stack
 
 - **Backend:** PHP (Laravel Framework)
@@ -44,6 +70,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - **Real-Time:** Laravel Echo, Pusher/WebSockets
 - **PDF Export:** dompdf
 - **Deployment:** Docker & Docker Compose (Unraid server)
+
+---
 
 ## HTTPS Integration (Proposed Solution)
 
@@ -62,6 +90,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 **Notes:**
 - Additional configuration may be needed for WebSockets over HTTPS.
 - Replace default credentials before production deployment.
+
+---
 
 ## Installation
 
@@ -108,6 +138,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - **Password:** `admin123`  
 *Change these before production!*
 
+---
+
 ## Usage
 
 - **Inventory:** Add, edit, delete, and search inventory items. Assign items to locations.
@@ -116,6 +148,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - **Notifications:** Receive real-time alerts for inventory events.
 - **API:** Use barcode/SKU endpoints to search for products.
 
+---
+
 ## System Architecture
 
 - **Backend:** Laravel (MVC), MySQL, Redis (optional for queue/cache)
@@ -123,6 +157,8 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - **Real-Time:** Laravel Echo + Pusher/WebSockets
 - **PDF/CSV:** dompdf, Laravel export tools
 - **Deployment:** Docker containers
+
+---
 
 ## API Endpoints (Sample)
 - `POST /api/login` - Authenticate user
@@ -134,12 +170,16 @@ A web-based inventory management system with robust audit capabilities, real-tim
 - `POST /api/audit/scan` - Scan item during audit
 - `GET /api/audit/report/{id}` - Export audit report
 
+---
+
 ## Security Considerations
 
 - Password hashing, session management, MFA, CAPTCHA
 - Role-based access control
 - Input validation and sanitization
 - Audit logging of inventory changes and user actions
+
+---
 
 ## Development
 
@@ -156,6 +196,32 @@ A web-based inventory management system with robust audit capabilities, real-tim
   php artisan db:seed
   ```
 
+---
+
+## Deployment Instructions
+
+See [`Deployment_Instructions.md`](./Deployment_Instructions.md) for full details on production, staging, and development setup.
+
+---
+
+## Automated Testing Expectations
+
+See [`Automated_Testing_Expectations.md`](./Automated_Testing_Expectations.md) for test coverage, CI/CD integration, and running tests.
+
+---
+
+## Versioning & Branch Strategy
+
+See [`Versioning_and_Branch_Strategy.md`](./Versioning_and_Branch_Strategy.md) for release procedures and branching workflow.
+
+---
+
+## Extensibility & Customization
+
+See [`Extensibility_and_Customization.md`](./Extensibility_and_Customization.md) for guidelines on extending or customizing the system.
+
+---
+
 ## Contributing
 
 1. Fork the repository
@@ -164,10 +230,24 @@ A web-based inventory management system with robust audit capabilities, real-tim
 4. Add tests if applicable
 5. Submit a pull request
 
+See `CONTRIBUTING.md` for full details.
+
+---
+
+## Security Policy
+
+For vulnerability reporting and secure coding practices, see `SECURITY.md`.
+
+---
+
 ## License
 
 MIT License
 
+---
+
 ## Support
 
 For support and questions, please open an issue in the repository.
+
+---
